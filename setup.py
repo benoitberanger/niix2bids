@@ -1,5 +1,5 @@
 import setuptools  # for the setup, i.e. generate the script that enables CLI
-import metadata    # version is located there
+from niix2bids import metadata
 
 with open('README.md') as f:
     long_description = f.readlines()
@@ -17,7 +17,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     entry_points={
         'console_scripts': [
-            'niix2bids = cli:main'
+            'niix2bids = niix2bids.cli:main'
         ]
     },
     classifiers=(

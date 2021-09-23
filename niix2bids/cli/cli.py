@@ -1,6 +1,5 @@
 import argparse  # parser of the CLI
-import metadata  # get_version
-import workflow  # main functions here
+from niix2bids import workflow, metadata
 
 
 ########################################################################################################################

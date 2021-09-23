@@ -3,7 +3,7 @@ from argparse import Namespace  # just for function signature
 import os                       # for path management
 from datetime import datetime   # to get current time
 import sys                      # to stop script execution on case of error
-import metadata                 # package metadata
+from niix2bids import metadata
 
 
 ########################################################################################################################
