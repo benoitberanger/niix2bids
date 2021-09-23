@@ -16,10 +16,21 @@ def main():
                              "This directory is usually the output directory of dcm2niix.")
     parser.add_argument("out_dir",
                         help="Output directory, receiving the BIDS architecture.")
+
     parser.add_argument("-v", "--verbose",
                         help="increase output verbosity : -v / -vv / -vvv ...",
                         action="count",
                         default=0)
+
+    parser.add_argument("--logfile",
+                        help="Write logfile (default=True)",
+                        dest="logfile",
+                        action="store_true")
+    parser.add_argument("--no-logfile",
+                        dest="logfile",
+                        action="store_false")
+    parser.set_defaults(logfile=True)
+
     args = parser.parse_args()
 
     # Format args
