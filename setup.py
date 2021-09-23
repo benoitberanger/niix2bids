@@ -7,7 +7,7 @@ with open('README.md') as f:
 setuptools.setup(
     name="niix2bids",
     version=metadata.get_version(),
-    author='Benoît Béranger',
+    author='Benoit Beranger',
     author_email='benoit.beranger@icm-institute.org',
     url='https://github.com/benoitberanger/niix2bids.git',
     description='Automatic BIDS architecture',
@@ -17,7 +17,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     entry_points={
         'console_scripts': [
-            'niix2bids = niix2bids.cli:main'
+            'niix2bids = cli:main'
         ]
     },
     classifiers=(

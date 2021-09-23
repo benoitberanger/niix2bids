@@ -1,7 +1,6 @@
-import sys
 import argparse  # parser of the CLI
 import metadata  # get_version
-import niix2bids  # main workflow is there
+import workflow  # main functions here
 
 
 ########################################################################################################################
@@ -34,7 +33,7 @@ def main():
     args = parser.parse_args()
 
     # Format args
-    args = niix2bids.format_args(args)
+    args = workflow.format_args(args)
 
     # Workflow
-    niix2bids.workflow(args)
+    workflow.run(args)
