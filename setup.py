@@ -1,5 +1,5 @@
-import setuptools
-import metadata
+import setuptools  # for the setup, i.e. generate the script that enables CLI
+import metadata    # version is located there
 
 with open('README.md') as f:
     long_description = f.readlines()

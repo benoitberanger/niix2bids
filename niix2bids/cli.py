@@ -1,14 +1,13 @@
 import sys
-import argparse
-import metadata
+import argparse  # parser of the CLI
+import metadata  # get_version
+import niix2bids  # main workflow is there
 
 
 ########################################################################################################################
 def main():
 
-    # ------------------------------------------------------------------------------------------------------------------
     # Parse command line arguments
-
     parser = argparse.ArgumentParser(description="Create BIDS architecture from nifti files (and .json sidecars)",
                                      epilog=f"niix2bids version {metadata.get_version()}")
 
@@ -21,9 +20,10 @@ def main():
                         help="increase output verbosity : -v / -vv / -vvv ...",
                         action="count",
                         default=0)
-
     args = parser.parse_args()
 
-    # ------------------------------------------------------------------------------------------------------------------
-    print(args)
-    print("done")
+    # Format args
+    args = niix2bids.format_args(args)
+
+    # Workflow
+    niix2bids.workflow(args)
