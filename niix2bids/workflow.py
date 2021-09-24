@@ -4,6 +4,7 @@ from argparse import Namespace  # just for function signature
 import os                       # for path management
 from datetime import datetime   # to get current time
 import sys                      # to stop script execution on case of error
+import re                       # regular expressions
 
 # local modules
 from niix2bids import metadata
@@ -53,6 +54,16 @@ def init_logger(out_dir: str, write_file: bool):
 
 
 ########################################################################################################################
+def fetch_all_files(dir: str) -> list:
+    file_list = []
+    for root, dirs, files in os.walk(dir):
+        for file in files:
+            file_list.append(os.path.join(root, file))
+    file_list.sort()
+    return file_list
+
+
+########################################################################################################################
 def run(args: Namespace) -> None:
 
     # initialize logger (console & file)
@@ -67,7 +78,16 @@ def run(args: Namespace) -> None:
 
     # check if input dir exists
     if not os.path.exists(args.nifti_dir):
-        msg = f"nifti_dir does not exist : {args.nifti_dir}"
-        log.error(msg)
+        log.error(f"nifti_dir does not exist : {args.nifti_dir}")
         sys.exit()
-        # raise OSError(msg)
+
+    # read all dirs and establish file list
+    file_list = fetch_all_files(args.nifti_dir)
+
+    # isolate .nii files
+    r = re.compile(r".*nii$")
+    file_list_nii = list(filter(r.match,file_list))
+    log.info(f"found {len(file_list_nii)} nifti files")
+    if len(file_list_nii)==0:
+        log.error(f"no .nii file found in {args.nifti_dir}")
+        sys.exit()
