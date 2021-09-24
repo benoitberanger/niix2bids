@@ -59,8 +59,32 @@ def fetch_all_files(in_dir: str) -> list:
     for root, dirs, files in os.walk(in_dir):
         for file in files:
             file_list.append(os.path.join(root, file))
+    if len(file_list)==0:
+        log = logging.getLogger(__name__)
+        log.error(f"no file found in {in_dir}")
+        sys.exit()
     file_list.sort()
     return file_list
+
+
+########################################################################################################################
+def isolate_nii_files(in_list: list) -> list:
+    log = logging.getLogger(__name__)
+    r = re.compile(r".*nii$")
+    file_list_nii = list(filter(r.match,in_list))
+    log.info(f"found {len(file_list_nii)} nifti files")
+    if len(file_list_nii)==0:
+        log.error(f"no .nii file found in {in_list}")
+        sys.exit()
+    return file_list_nii
+
+
+########################################################################################################################
+def check_if_json_exists(in_list: list) -> None:
+    log = logging.getLogger(__name__)
+    for file in in_list:
+        if not os.path.exists( os.path.splitext(file)[0] + ".json" ):
+            log.warning(f"this file has no .json associated : {file}")
 
 
 ########################################################################################################################
@@ -85,9 +109,7 @@ def run(args: Namespace) -> None:
     file_list = fetch_all_files(args.nifti_dir)
 
     # isolate .nii files
-    r = re.compile(r".*nii$")
-    file_list_nii = list(filter(r.match,file_list))
-    log.info(f"found {len(file_list_nii)} nifti files")
-    if len(file_list_nii)==0:
-        log.error(f"no .nii file found in {args.nifti_dir}")
-        sys.exit()
+    file_list_nii = isolate_nii_files(file_list)
+
+    # check if all .nii files have their own
+    check_if_json_exists(file_list_nii)
