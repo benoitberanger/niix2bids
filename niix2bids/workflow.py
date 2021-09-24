@@ -45,7 +45,7 @@ def init_logger(out_dir: str, write_file: bool):
     # same thing but for a file handler
     if write_file:
         timestamp = datetime.now().strftime('%Y-%m-%d_%Hh%Sm%S')
-        logfile = os.path.join(out_dir, "log_" + timestamp + ".txt" )
+        logfile = os.path.join(out_dir, "log_" + timestamp + ".txt")
 
         fileHandeler = logging.FileHandler(logfile)
         fileHandeler.setLevel(logging.DEBUG)
@@ -54,9 +54,9 @@ def init_logger(out_dir: str, write_file: bool):
 
 
 ########################################################################################################################
-def fetch_all_files(dir: str) -> list:
+def fetch_all_files(in_dir: str) -> list:
     file_list = []
-    for root, dirs, files in os.walk(dir):
+    for root, dirs, files in os.walk(in_dir):
         for file in files:
             file_list.append(os.path.join(root, file))
     file_list.sort()
