@@ -5,9 +5,11 @@ import os                       # for path management
 from datetime import datetime   # to get current time
 import sys                      # to stop script execution on case of error
 import re                       # regular expressions
+import time                     # to time execution of code
 
 # local modules
 from niix2bids import metadata
+from niix2bids.classes import Volume
 
 # dependency modules
 
@@ -54,7 +56,7 @@ def init_logger(out_dir: str, write_file: bool):
 
 
 ########################################################################################################################
-def fetch_all_files(in_dir: str) -> list:
+def fetch_all_files(in_dir: str) -> list[str]:
 
     file_list = []
     for root, dirs, files in os.walk(in_dir):
@@ -71,7 +73,7 @@ def fetch_all_files(in_dir: str) -> list:
 
 
 ########################################################################################################################
-def isolate_nii_files(in_list: list) -> list:
+def isolate_nii_files(in_list: list[str]) -> list[str]:
     log = logging.getLogger(__name__)
 
     r = re.compile(r".*nii$")
@@ -86,7 +88,7 @@ def isolate_nii_files(in_list: list) -> list:
 
 
 ########################################################################################################################
-def check_if_json_exists(file_list_nii: list) -> tuple[list, list]:
+def check_if_json_exists(file_list_nii: list[str]) -> tuple[list[str], list[str]]:
     log = logging.getLogger(__name__)
 
     file_list_json = []
@@ -100,6 +102,22 @@ def check_if_json_exists(file_list_nii: list) -> tuple[list, list]:
 
     log.info(f"remaining {len(file_list_nii)} nifti files")
     return file_list_nii, file_list_json
+
+
+########################################################################################################################
+def create_volume_list(file_list_nii: list[str]) -> list[Volume]:
+
+    for file in file_list_nii:
+        Volume(file)
+
+    return Volume.instances
+
+
+########################################################################################################################
+def read_all_json(volume_list: list[Volume]):
+
+    for volume in volume_list:
+        volume.load_json()
 
 
 ########################################################################################################################
@@ -128,6 +146,17 @@ def run(args: Namespace) -> None:
 
     # check if all .nii files have their own .json
     file_list_nii, file_list_json = check_if_json_exists(file_list_nii)
+
+    # create Volume objects
+    volume_list = create_volume_list(file_list_nii)
+
+    # read all json files
+    log.debug(f"start reading all JSON files...")
+    start_time = time.time()
+    read_all_json(volume_list)
+    stop_time = time.time()
+    log.debug(f"... done")
+    log.debug(f"reading all JSON took in {stop_time-start_time: .3f} seconds")
 
     # THE END
     sys.exit(0)
