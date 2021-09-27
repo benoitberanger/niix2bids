@@ -1,6 +1,7 @@
 import os    # for path management
 import json  # json file loading
 
+
 ########################################################################################################################
 class File:
 
@@ -34,7 +35,7 @@ class Volume:
         # separate name and extension
         name, ext = os.path.splitext(path)
         if ext != ".nii":
-            raise  RuntimeError(f"not a .nii file : {path}")
+            raise RuntimeError(f"not a .nii file : {path}")
 
         # instance filling
         self.nii = Nii(path)

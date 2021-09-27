@@ -63,7 +63,7 @@ def fetch_all_files(in_dir: str) -> list[str]:
         for file in files:
             file_list.append(os.path.join(root, file))
 
-    if len(file_list)==0:
+    if len(file_list) == 0:
         log = logging.getLogger(__name__)
         log.error(f"no file found in {in_dir}")
         sys.exit(1)
@@ -77,7 +77,7 @@ def isolate_nii_files(in_list: list[str]) -> list[str]:
     log = logging.getLogger(__name__)
 
     r = re.compile(r".*nii$")
-    file_list_nii = list(filter(r.match,in_list))
+    file_list_nii = list(filter(r.match, in_list))
 
     log.info(f"found {len(file_list_nii)} nifti files")
     if len(file_list_nii) == 0:
