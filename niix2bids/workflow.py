@@ -7,11 +7,12 @@ import sys                      # to stop script execution on case of error
 import re                       # regular expressions
 import time                     # to time execution of code
 
+# dependency modules
+
 # local modules
+import niix2bids.decisiontree_siemens
 from niix2bids import metadata
 from niix2bids.classes import Volume
-
-# dependency modules
 
 
 ########################################################################################################################
@@ -114,10 +115,20 @@ def create_volume_list(file_list_nii: list[str]) -> list[Volume]:
 
 
 ########################################################################################################################
-def read_all_json(volume_list: list[Volume]):
+def read_all_json(volume_list: list[Volume]) -> None:
 
     for volume in volume_list:
         volume.load_json()
+
+
+########################################################################################################################
+def assemble_list_param(volume_list: list[Volume]) -> list[dict]:
+
+    list_param = []
+    for volume in volume_list:
+        list_param.append(volume.param)
+
+    return list_param
 
 
 ########################################################################################################################
@@ -157,6 +168,12 @@ def run(args: Namespace) -> None:
     stop_time = time.time()
     log.debug(f"... done")
     log.debug(f"reading all JSON took in {stop_time-start_time: .3f} seconds")
+
+    # regroup all param form each json into one list for easy access
+    list_param = assemble_list_param(volume_list)
+
+    # apply decision tree
+    job = niix2bids.decisiontree_siemens.decisiontree(list_param)
 
     # THE END
     sys.exit(0)
