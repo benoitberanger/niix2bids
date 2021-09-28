@@ -1,6 +1,6 @@
 # standard modules
 import logging                  # logging lib (terminal & file)
-from argparse import Namespace  # just for function signature
+import argparse                 # just for function signature
 import os                       # for path management
 from datetime import datetime   # to get current time
 import sys                      # to stop script execution on case of error
@@ -10,16 +10,9 @@ import time                     # to time execution of code
 # dependency modules
 
 # local modules
-import niix2bids.decisiontree_siemens
+import niix2bids.decision_tree.siemens
 from niix2bids import metadata
 from niix2bids.classes import Volume
-
-
-########################################################################################################################
-def format_args(args: Namespace) -> Namespace:
-    args.nifti_dir = os.path.abspath(args.nifti_dir)
-    args.out_dir   = os.path.abspath(args.out_dir  )
-    return args
 
 
 ########################################################################################################################
@@ -132,7 +125,7 @@ def assemble_list_param(volume_list: list[Volume]) -> list[dict]:
 
 
 ########################################################################################################################
-def run(args: Namespace) -> None:
+def run(args: argparse.Namespace) -> None:
 
     # initialize logger (console & file)
     init_logger(args.out_dir, args.logfile)
@@ -173,7 +166,7 @@ def run(args: Namespace) -> None:
     list_param = assemble_list_param(volume_list)
 
     # apply decision tree
-    job = niix2bids.decisiontree_siemens.decisiontree(list_param)
+    job = niix2bids.decision_tree.siemens.run(list_param)
 
     # THE END
     sys.exit(0)

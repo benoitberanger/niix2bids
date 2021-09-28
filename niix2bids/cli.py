@@ -1,5 +1,18 @@
+# standard modules
 import argparse  # parser of the CLI
-from niix2bids import workflow, metadata
+import os        # for path management
+
+# dependency modules
+
+# local modules
+import niix2bids
+
+
+########################################################################################################################
+def format_args(args: argparse.Namespace) -> argparse.Namespace:
+    args.nifti_dir = os.path.abspath(args.nifti_dir)
+    args.out_dir   = os.path.abspath(args.out_dir  )
+    return args
 
 
 ########################################################################################################################
@@ -7,7 +20,7 @@ def main():
 
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Create BIDS architecture from nifti files (and .json sidecars)",
-                                     epilog=f"niix2bids version {metadata.get_version()}")
+                                     epilog=f"niix2bids version {niix2bids.metadata.get_version()}")
 
     parser.add_argument("nifti_dir",
                         help="nifti directory that will be parsed and transformed into BIDS architecture."
@@ -32,7 +45,7 @@ def main():
     args = parser.parse_args()
 
     # Format args
-    args = workflow.format_args(args)
+    args = format_args(args)
 
     # Workflow
-    workflow.run(args)
+    niix2bids.workflow.run(args)
