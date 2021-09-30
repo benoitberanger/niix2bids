@@ -42,3 +42,7 @@ def assert_key_val(df: pandas.DataFrame, key: str, value: str) -> None:
 
     log.debug(f'checking in all .json if "{key}" == "{value}" done')
 
+
+########################################################################################################################
+def slice_with_seqname(df: pandas.DataFrame, seq_regex: str) -> pandas.DataFrame:
+    return df[df['PulseSequenceDetails'].str.match(seq_regex)]
