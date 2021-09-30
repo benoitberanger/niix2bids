@@ -15,6 +15,9 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     license='GPL3',
     packages=setuptools.find_packages(),
+    install_requires=[
+      "pandas"
+    ],
     entry_points={
         'console_scripts': [
             'niix2bids = niix2bids.cli:main'

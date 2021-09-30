@@ -3,9 +3,10 @@ import logging  # logging lib (terminal & file)
 import sys      # to stop script execution on case of error
 
 # dependency modules
+import pandas
 
 # local modules
-from niix2bids.decision_tree import check
+from niix2bids.decision_tree import utils
 
 
 # get logger with current name
@@ -17,15 +18,17 @@ def run(list_param: list[dict]) -> str:
 
     log.info(f'starting decision tree for "Siemens"... ')
 
-    # checks
-    check.assert_is_dcm2niix(list_param)
-    check.assert_all_key_val(list_param, "Modality"    , "MR"     )
-    check.assert_all_key_val(list_param, "Manufacturer", "Siemens")
+    # conversion of list[dict] to pandas.DataFrame
+    # to pandas.DataFrame object is like table in matlab, with much more embedded methods
+    df = pandas.DataFrame(list_param)
 
-    # extract useful parameters for the decision tree
-    PulseSequenceDetails = [dic['PulseSequenceDetails'].rsplit("%_")[1] for dic in list_param]
-    MRAcquisitionType    = [dic['MRAcquisitionType'   ]                 for dic in list_param]
-    ProtocolName         = [dic['ProtocolName'        ]                 for dic in list_param]
-    SeriesDescription    = [dic['SeriesDescription'   ]                 for dic in list_param]
+    # checks
+    utils.assert_is_dcm2niix(df)
+    utils.assert_key_val(df, "Modality"    , "MR"     )
+    utils.assert_key_val(df, "Manufacturer", "Siemens")
+
+    # make some extraction / conversion
+    # %CustomerSeq%_cmrr_mbep2d_bold -> cmrr_mbep2d_bold
+    df['PulseSequenceDetails'] = df['PulseSequenceDetails'].apply(lambda s: s.rsplit("%_")[1])
 
     return ""
