@@ -6,33 +6,37 @@ import pandas
 
 # local modules
 from niix2bids.decision_tree import utils
-
+from niix2bids.classes import Volume
 
 # get logger with current name
 log = logging.getLogger(__name__)
 
 
 ########################################################################################################################
-def mprage(df: pandas.DataFrame, seq_regex: str) -> str:
+def mprage(volume_list: list[Volume], df: pandas.DataFrame, seq_regex: str) -> str:
     seq_info = utils.slice_with_seqname(df, seq_regex)
+
     # in case of mp2rage, there are 3 (or 4 wih T1map) images generated
     # the SeriesDescription is automatically generated such as ProtocalName + suffix, where suffix = _INV1, _INV2,
     # _UNI_Images (and _T1_Images)
-
-    suffix_list = ['_INV1', '_INV2', '_T1_Images', '_UNI_Images']
+    suffix_list = ['.*_INV1$', '.*_INV2$', '.*_T1_Images$', '.*_UNI_Images$']
     for suffix in suffix_list:
-        seq = utils.slice_with_seriesdescription(seq_info, suffix)
+        seq_suffix = utils.slice_with_seriesdescription(seq_info, suffix)
+        for idx in range(len(seq_suffix)):
+            seq = seq_suffix.iloc[idx]
+            vol = seq['Volume']
 
-    for idx in range(len(seq_info)):
-        seq = seq_info.iloc[idx]
+    # now that we have dealt with the mp2rage@siemens suffix, we can continue
 
     return ""
 
 
 ########################################################################################################################
-def run(list_param: list[dict]) -> str:
+def run(volume_list: list[Volume]) -> str:
 
     log.info(f'starting decision tree for "Siemens"... ')
+
+    list_param = utils.assemble_list_param(volume_list)
 
     # conversion of list[dict] to pandas.DataFrame
     # to pandas.DataFrame object is like table in matlab, with much more embedded methods
@@ -64,6 +68,6 @@ def run(list_param: list[dict]) -> str:
 
     for seq_regex, program in list_seq_regex:
         func = eval(program)
-        job = func(df, seq_regex)
+        job = func(volume_list, df, seq_regex)
 
     return job

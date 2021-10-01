@@ -11,6 +11,9 @@ class File:
         self.path = path
         self.__class__.instances.append(self)
 
+    def __repr__(self):
+        return f"<{__name__}{self.__class__.__name__}: path = {self.path}>"
+
 
 ########################################################################################################################
 class Nii(File):
@@ -40,7 +43,8 @@ class Volume:
         # instance filling
         self.nii = Nii(path)
         self.json = Json(name + ".json")
-        self.param = dict
+        self.seqparam = dict
+        self.bidsfields = dict
 
         # store a list of all instances
         self.__class__.instances.append(self)
@@ -48,4 +52,9 @@ class Volume:
     # ------------------------------------------------------------------------------------------------------------------
     def load_json(self):
         with open(self.json.path, "r") as file:
-            self.param = json.load(file)
+            self.seqparam = json.load(file)  # load the .json content as dict
+            self.seqparam['Volume'] = self   # save also in the dict a pointer to the object itself
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def __repr__(self):
+        return f"<{__name__}{self.__class__.__name__}: path = {self.nii.path}>"

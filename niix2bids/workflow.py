@@ -115,16 +115,6 @@ def read_all_json(volume_list: list[Volume]) -> None:
 
 
 ########################################################################################################################
-def assemble_list_param(volume_list: list[Volume]) -> list[dict]:
-
-    list_param = []
-    for volume in volume_list:
-        list_param.append(volume.param)
-
-    return list_param
-
-
-########################################################################################################################
 def run(args: argparse.Namespace) -> None:
 
     # initialize logger (console & file)
@@ -162,11 +152,10 @@ def run(args: argparse.Namespace) -> None:
     log.debug(f"... done")
     log.debug(f"reading all JSON took in {stop_time-start_time: .3f} seconds")
 
-    # regroup all param form each json into one list for easy access
-    list_param = assemble_list_param(volume_list)
-
     # apply decision tree
-    job = niix2bids.decision_tree.siemens.run(list_param)
+    niix2bids.decision_tree.siemens.run(volume_list)
+
+    # perform files operations
 
     # THE END
     sys.exit(0)

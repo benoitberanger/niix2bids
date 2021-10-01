@@ -6,10 +6,21 @@ import sys      # to stop script execution on case of error
 import pandas
 
 # local modules
+from niix2bids.classes import Volume
 
 
 # get logger with current name
 log = logging.getLogger(__name__)
+
+
+########################################################################################################################
+def assemble_list_param(volume_list: list[Volume]) -> list[dict]:
+
+    list_param = []
+    for volume in volume_list:
+        list_param.append(volume.seqparam)
+
+    return list_param
 
 
 ########################################################################################################################
