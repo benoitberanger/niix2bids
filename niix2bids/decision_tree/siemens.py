@@ -79,6 +79,40 @@ def tse_vfl(df: pandas.DataFrame, seq_regex: str):
 
 
 ########################################################################################################################
+def diff(df: pandas.DataFrame, seq_regex: str):
+    seq_info = utils.slice_with_seqname(df, seq_regex)
+
+    # in case of multiband sequence, SBRef images may be generated
+    # therefore, we need to deal with them beforehand
+    seq_sbref = utils.slice_with_seriesdescription(seq_info, '.*_SBRef$')
+    idx = 0
+    for row_idx, seq in seq_sbref.iterrows():
+        idx += 1
+        vol = seq['Volume']
+        vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
+        vol.bidsfields['ses'] = '01'
+        vol.bidsfields['tag'] = 'dwi'
+        vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+        vol.bidsfields['run'] = idx
+        vol.bidsfields['suffix'] = 'sbref'
+        seq_info = seq_info.drop(row_idx)
+
+    idx = 0
+    for row_idx, seq in seq_info.iterrows():
+        idx += 1
+        vol = seq['Volume']
+        # check if .bval et .bvec exist
+        vol.check_if_bval_exists()
+        vol.check_if_bvec_exists()
+        vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
+        vol.bidsfields['ses'] = '01'
+        vol.bidsfields['tag'] = 'dwi'
+        vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+        vol.bidsfields['run'] = idx
+        vol.bidsfields['suffix'] = 'dwi'
+
+
+########################################################################################################################
 def run(volume_list: list[Volume]) -> str:
 
     log.info(f'starting decision tree for "Siemens"... ')
@@ -99,10 +133,11 @@ def run(volume_list: list[Volume]) -> str:
     df['PulseSequenceDetails'] = df['PulseSequenceDetails'].apply(lambda s: s.rsplit("%_")[1])
 
     list_seq_regex = [
+        ##[regex of seq         func name]
         ['^tfl$'              , 'mprage' ],  # mprage & mp2rage
         ['.*mp2rage.*'        , 'mprage' ],  # mp2rage WIP
         ['^tse_vfl$'          , 'tse_vfl'],  # 3DT2 space & 3DFLAIR space_ir
-        # ['diff'             , 'diff'   ],  # diffusion
+        ['.*diff.*'           , 'diff'   ],  # diffusion
         # ['(bold)|(pace)'    , 'bold'   ],  # bold fmri
         # ['gre_field_mapping', 'fmap'   ],  # dual echo field map
         # ['^gre$'            , 'gre'    ],  # FLASH
