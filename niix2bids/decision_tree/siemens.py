@@ -15,6 +15,17 @@ log = logging.getLogger(__name__)
 ########################################################################################################################
 def mprage(df: pandas.DataFrame, seq_regex: str) -> str:
     seq_info = utils.slice_with_seqname(df, seq_regex)
+    # in case of mp2rage, there are 3 (or 4 wih T1map) images generated
+    # the SeriesDescription is automatically generated such as ProtocalName + suffix, where suffix = _INV1, _INV2,
+    # _UNI_Images (and _T1_Images)
+
+    suffix_list = ['_INV1', '_INV2', '_T1_Images', '_UNI_Images']
+    for suffix in suffix_list:
+        seq = utils.slice_with_seriesdescription(seq_info, suffix)
+
+    for idx in range(len(seq_info)):
+        seq = seq_info.iloc[idx]
+
     return ""
 
 

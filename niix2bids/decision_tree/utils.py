@@ -46,3 +46,8 @@ def assert_key_val(df: pandas.DataFrame, key: str, value: str) -> None:
 ########################################################################################################################
 def slice_with_seqname(df: pandas.DataFrame, seq_regex: str) -> pandas.DataFrame:
     return df[df['PulseSequenceDetails'].str.match(seq_regex)]
+
+
+########################################################################################################################
+def slice_with_seriesdescription(df: pandas.DataFrame, seq_regex: str) -> pandas.DataFrame:
+    return df[df['SeriesDescription'].str.match(seq_regex)]
