@@ -66,6 +66,11 @@ def slice_with_seriesdescription(df: pandas.DataFrame, seq_regex: str) -> pandas
 
 
 ########################################################################################################################
+def slice_with_seqvariant(df: pandas.DataFrame, seq_regex: str) -> pandas.DataFrame:
+    return df[df['SequenceName'].str.match(seq_regex)]
+
+
+########################################################################################################################
 def clean_name(input_str: str) -> str:
     output_str = re.sub(r'[^A-Za-z0-9]+','',input_str)
     return output_str
