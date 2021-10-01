@@ -33,6 +33,7 @@ def mprage(volume_list: list[Volume], df: pandas.DataFrame, seq_regex: str):
             vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
             vol.bidsfields['run'] = idx
             vol.bidsfields['suffix'] = suffix_list[suffix_regex.index(suffix)]
+            seq_info = seq_info.drop(row_idx)
 
     # now that we have dealt with the mp2rage@siemens suffix, we can continue
     idx = 0
@@ -69,7 +70,7 @@ def run(volume_list: list[Volume]) -> str:
 
     list_seq_regex = [
         ['tfl'              , 'mprage' ],  # mprage & mp2rage
-        # ['mp2rage'          , 'mprage' ],  # mp2rage WIP
+        ['mp2rage'          , 'mprage' ],  # mp2rage WIP
         # ['tse_vfl'          , 'tse_vfl'],  # 3DT2 space & 3DFLAIR space_ir
         # ['diff'             , 'diff'   ],  # diffusion
         # ['(bold)|(pace)'    , 'bold'   ],  # bold fmri
@@ -85,5 +86,9 @@ def run(volume_list: list[Volume]) -> str:
     for seq_regex, program in list_seq_regex:
         func = eval(program)
         func(volume_list, df, seq_regex)
+
+    for vol in volume_list:
+        if bool(vol.bidsfields):
+            print(vol.bidsfields)
 
     return ""
