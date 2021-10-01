@@ -13,22 +13,38 @@ log = logging.getLogger(__name__)
 
 
 ########################################################################################################################
-def mprage(volume_list: list[Volume], df: pandas.DataFrame, seq_regex: str) -> str:
+def mprage(volume_list: list[Volume], df: pandas.DataFrame, seq_regex: str):
     seq_info = utils.slice_with_seqname(df, seq_regex)
 
     # in case of mp2rage, there are 3 (or 4 wih T1map) images generated
     # the SeriesDescription is automatically generated such as ProtocalName + suffix, where suffix = _INV1, _INV2,
     # _UNI_Images (and _T1_Images)
-    suffix_list = ['.*_INV1$', '.*_INV2$', '.*_T1_Images$', '.*_UNI_Images$']
-    for suffix in suffix_list:
+    suffix_regex = ['.*_INV1$', '.*_INV2$', '.*_T1_Images$', '.*_UNI_Images$']
+    suffix_list  = ['inv1'    ,  'inv2'   , 'T1map'        , 'UNIT1'         ]
+    for suffix in suffix_regex:
         seq_suffix = utils.slice_with_seriesdescription(seq_info, suffix)
-        for idx in range(len(seq_suffix)):
-            seq = seq_suffix.iloc[idx]
+        idx = 0
+        for row_idx, seq in seq_suffix.iterrows():
+            idx += 1
             vol = seq['Volume']
+            vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
+            vol.bidsfields['ses'] = '01'
+            vol.bidsfields['tag'] = 'anat'
+            vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+            vol.bidsfields['run'] = idx
+            vol.bidsfields['suffix'] = suffix_list[suffix_regex.index(suffix)]
 
     # now that we have dealt with the mp2rage@siemens suffix, we can continue
-
-    return ""
+    idx = 0
+    for row_idx, seq in seq_info.iterrows():
+        idx += 1
+        vol = seq['Volume']
+        vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
+        vol.bidsfields['ses'] = '01'
+        vol.bidsfields['tag'] = 'anat'
+        vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+        vol.bidsfields['run'] = idx
+        vol.bidsfields['suffix'] = 'T1w'
 
 
 ########################################################################################################################
@@ -68,6 +84,6 @@ def run(volume_list: list[Volume]) -> str:
 
     for seq_regex, program in list_seq_regex:
         func = eval(program)
-        job = func(volume_list, df, seq_regex)
+        func(volume_list, df, seq_regex)
 
-    return job
+    return ""

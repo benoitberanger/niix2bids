@@ -12,7 +12,7 @@ class File:
         self.__class__.instances.append(self)
 
     def __repr__(self):
-        return f"<{__name__}{self.__class__.__name__}: path = {self.path}>"
+        return f"<{__name__}.{self.__class__.__name__}: path = {self.path}>"
 
 
 ########################################################################################################################
@@ -44,7 +44,7 @@ class Volume:
         self.nii = Nii(path)
         self.json = Json(name + ".json")
         self.seqparam = dict
-        self.bidsfields = dict
+        self.bidsfields = {}
 
         # store a list of all instances
         self.__class__.instances.append(self)
@@ -57,4 +57,4 @@ class Volume:
 
     # ------------------------------------------------------------------------------------------------------------------
     def __repr__(self):
-        return f"<{__name__}{self.__class__.__name__}: path = {self.nii.path}>"
+        return f"<{__name__}.{self.__class__.__name__}: path = {self.nii.path}>"
