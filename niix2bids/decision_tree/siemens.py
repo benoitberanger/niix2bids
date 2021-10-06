@@ -113,7 +113,7 @@ def diff(df: pandas.DataFrame, seq_regex: str):
 
 
 ########################################################################################################################
-def run(volume_list: list[Volume]) -> str:
+def run(volume_list: list[Volume]):
 
     log.info(f'starting decision tree for "Siemens"... ')
 
@@ -133,7 +133,7 @@ def run(volume_list: list[Volume]) -> str:
     df['PulseSequenceDetails'] = df['PulseSequenceDetails'].apply(lambda s: s.rsplit("%_")[1])
 
     list_seq_regex = [
-        ##[regex of seq         func name]
+        ##[seq_regex             fcn name]
         ['^tfl$'              , 'mprage' ],  # mprage & mp2rage
         ['.*mp2rage.*'        , 'mprage' ],  # mp2rage WIP
         ['^tse_vfl$'          , 'tse_vfl'],  # 3DT2 space & 3DFLAIR space_ir
@@ -148,12 +148,12 @@ def run(volume_list: list[Volume]) -> str:
         # ['medic'            , 'medic'  ],  # dual echo T2*
     ]
 
-    for seq_regex, program in list_seq_regex:
-        func = eval(program)
-        func(df, seq_regex)
+    df_by_subject = df.groupby('PatientName')  # subject by subject sequence group
+    for name, group in df_by_subject:
+        for seq_regex, fcn_name in list_seq_regex:
+            func = eval(fcn_name)    # fetch the name of the function to call dynamically
+            func(group, seq_regex)  # execute the function
 
     for vol in volume_list:
         if bool(vol.bidsfields):
             print(vol.bidsfields)
-
-    return ""
