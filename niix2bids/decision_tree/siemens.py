@@ -17,6 +17,9 @@ def mprage(df: pandas.DataFrame, seq_regex: str):
     seq_info = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
     seq_info = utils.slice_with_mracquistiontype(seq_info, '3D')  # keep 3D images
 
+    if seq_info.empty:  # just run the code faster
+        return
+
     # in case of mp2rage, there are 3 (or 4 wih T1map) images generated
     # the SeriesDescription is automatically generated such as ProtocalName + suffix, where suffix = _INV1, _INV2,
     # _UNI_Images (and _T1_Images)
@@ -54,6 +57,9 @@ def tse_vfl(df: pandas.DataFrame, seq_regex: str):
     seq_info = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
     seq_info = utils.slice_with_mracquistiontype(seq_info, '3D')  # keep 3D images
 
+    if seq_info.empty:  # just run the code faster
+        return
+
     seq_info_T2w   = utils.slice_with_seqvariant(seq_info, '_spc_')
     seq_info_FLAIR = utils.slice_with_seqvariant(seq_info, '_spcir_')
 
@@ -85,6 +91,9 @@ def diff(df: pandas.DataFrame, seq_regex: str):
     seq_info = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
     seq_info = utils.slice_with_mracquistiontype(seq_info, '2D')  # keep 2D images
 
+    if seq_info.empty:  # just run the code faster
+        return
+
     # in case of multiband sequence, SBRef images may be generated
     # therefore, we need to deal with them beforehand
     seq_sbref = utils.slice_with_seriesdescription(seq_info, '.*_SBRef$')
@@ -100,6 +109,7 @@ def diff(df: pandas.DataFrame, seq_regex: str):
         vol.bidsfields['suffix'] = 'sbref'
         seq_info = seq_info.drop(row_idx)
 
+    # and now the normal volume
     idx = 0
     for row_idx, seq in seq_info.iterrows():
         idx += 1
@@ -119,6 +129,9 @@ def diff(df: pandas.DataFrame, seq_regex: str):
 def bold(df: pandas.DataFrame, seq_regex: str):
     seq_info = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
     seq_info = utils.slice_with_mracquistiontype(seq_info, '2D')  # keep 2D images
+
+    if seq_info.empty:  # just run the code faster
+        return
 
     # in case of multiband sequence, SBRef images may be generated
     # therefore, we need to deal with them beforehand
@@ -153,7 +166,6 @@ def bold(df: pandas.DataFrame, seq_regex: str):
         if not pandas.isna(seq['EchoNumber']):
             vol.bidsfields['echo'] = int(seq['EchoNumber'])
         vol.bidsfields['suffix'] = 'bold'
-        seq_info = seq_info.drop(row_idx)
 
     # phase
     pha = utils.slice_with_imagetype(seq_info,'P')
@@ -169,13 +181,15 @@ def bold(df: pandas.DataFrame, seq_regex: str):
         if not pandas.isna(seq['EchoNumber']):
             vol.bidsfields['echo'] = int(seq['EchoNumber'])
         vol.bidsfields['suffix'] = 'pha'
-        seq_info = seq_info.drop(row_idx)
 
 
 ########################################################################################################################
 def fmap(df: pandas.DataFrame, seq_regex: str):
     seq_info = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
     seq_info = utils.slice_with_mracquistiontype(seq_info, '2D')  # keep 2D images
+
+    if seq_info.empty:  # just run the code faster
+        return
 
 
 ########################################################################################################################
@@ -189,7 +203,7 @@ def run(volume_list: list[Volume]):
     # to pandas.DataFrame object is like table in matlab, with much more embedded methods
     df = pandas.DataFrame(list_param)
 
-    # eliminate sequences whitout PulseSequenceDetails, we cannot parse them
+    # eliminate sequences whiteout PulseSequenceDetails, we cannot parse them
     df = df[ df['PulseSequenceDetails'].isna() == False]
 
     # checks
@@ -220,7 +234,7 @@ def run(volume_list: list[Volume]):
     df_by_subject = df.groupby('PatientName')  # subject by subject sequence group
     for name, group in df_by_subject:
         for seq_regex, fcn_name in list_seq_regex:
-            func = eval(fcn_name)    # fetch the name of the function to call dynamically
+            func = eval(fcn_name)   # fetch the name of the function to call dynamically
             func(group, seq_regex)  # execute the function
 
     for vol in volume_list:
