@@ -77,13 +77,18 @@ def slice_with_mracquistiontype(df: pandas.DataFrame, regex: str) -> pandas.Data
 
 ########################################################################################################################
 def slice_with_imagetype(df: pandas.DataFrame, type: str) -> pandas.DataFrame:
-    # ImageType exemple :
-    # ['ORIGINAL', 'PRIMARY', 'M', 'MB', 'TE1', 'ND', 'MOSAIC']
-    #  0           1         >>2<<
+    """
+    ImageType example :
+    ['ORIGINAL', 'PRIMARY', 'M', 'MB', 'TE1', 'ND', 'MOSAIC']
+     0           1         >>2<<
+     """
     return df[df['ImageType'].apply(lambda x: x[2] == type)]
 
 
 ########################################################################################################################
 def clean_name(input_str: str) -> str:
+    """
+    remove all non-alphanumerical character
+    """
     output_str = re.sub(r'[^A-Za-z0-9]+', '', input_str)
     return output_str
