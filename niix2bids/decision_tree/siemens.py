@@ -2,7 +2,7 @@
 import logging  # logging lib (terminal & file)
 
 # dependency modules
-import pandas
+import pandas   # for DataFrame
 
 # local modules
 from niix2bids.decision_tree import utils
@@ -14,7 +14,8 @@ log = logging.getLogger(__name__)
 
 ########################################################################################################################
 def mprage(df: pandas.DataFrame, seq_regex: str):
-    seq_info = utils.slice_with_seqname(df, seq_regex)
+    seq_info = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
+    seq_info = utils.slice_with_mracquistiontype(seq_info, '3D')  # keep 3D images
 
     # in case of mp2rage, there are 3 (or 4 wih T1map) images generated
     # the SeriesDescription is automatically generated such as ProtocalName + suffix, where suffix = _INV1, _INV2,
@@ -50,7 +51,8 @@ def mprage(df: pandas.DataFrame, seq_regex: str):
 
 ########################################################################################################################
 def tse_vfl(df: pandas.DataFrame, seq_regex: str):
-    seq_info = utils.slice_with_seqname(df, seq_regex)
+    seq_info = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
+    seq_info = utils.slice_with_mracquistiontype(seq_info, '3D')  # keep 3D images
 
     seq_info_T2w   = utils.slice_with_seqvariant(seq_info, '_spc_')
     seq_info_FLAIR = utils.slice_with_seqvariant(seq_info, '_spcir_')
@@ -80,7 +82,8 @@ def tse_vfl(df: pandas.DataFrame, seq_regex: str):
 
 ########################################################################################################################
 def diff(df: pandas.DataFrame, seq_regex: str):
-    seq_info = utils.slice_with_seqname(df, seq_regex)
+    seq_info = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
+    seq_info = utils.slice_with_mracquistiontype(seq_info, '2D')  # keep 2D images
 
     # in case of multiband sequence, SBRef images may be generated
     # therefore, we need to deal with them beforehand
@@ -123,6 +126,9 @@ def run(volume_list: list[Volume]):
     # to pandas.DataFrame object is like table in matlab, with much more embedded methods
     df = pandas.DataFrame(list_param)
 
+    # eliminate sequences whitout PulseSequenceDetails, we cannot parse them
+    df = df[ df['PulseSequenceDetails'].isna() == False]
+
     # checks
     utils.assert_is_dcm2niix(df)
     utils.assert_key_val(df, "Modality"    , "MR"     )
@@ -133,7 +139,7 @@ def run(volume_list: list[Volume]):
     df['PulseSequenceDetails'] = df['PulseSequenceDetails'].apply(lambda s: s.rsplit("%_")[1])
 
     list_seq_regex = [
-        ##[seq_regex             fcn name]
+        # [seq_regex             fcn name]
         ['^tfl$'              , 'mprage' ],  # mprage & mp2rage
         ['.*mp2rage.*'        , 'mprage' ],  # mp2rage WIP
         ['^tse_vfl$'          , 'tse_vfl'],  # 3DT2 space & 3DFLAIR space_ir
