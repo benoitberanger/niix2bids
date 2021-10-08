@@ -43,6 +43,21 @@ def assert_is_dcm2niix(df: pandas.DataFrame) -> None:
 
 
 ########################################################################################################################
+def assert_has_patientname(df: pandas.DataFrame) -> None:
+    is_key_PatientName = 'PatientName' in df.columns
+
+    if not is_key_PatientName:
+        log.error(f'no .json file has "PatientName" field')
+        sys.exit(1)
+
+    has_PatientName = df['PatientName'].isna() == False
+    if not all(has_PatientName):
+        log.error(f'At least one .json do not contain the field "PatientName". '
+                  f'When converting with "dcm2niix", use the option "-ba n" to disable anonymization')
+        sys.exit(1)
+
+
+########################################################################################################################
 def assert_key_val(df: pandas.DataFrame, key: str, value: str) -> None:
 
     if key not in df.columns:
