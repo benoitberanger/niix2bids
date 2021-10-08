@@ -116,6 +116,29 @@ def diff(df: pandas.DataFrame, seq_regex: str):
 
 
 ########################################################################################################################
+def bold(df: pandas.DataFrame, seq_regex: str):
+    seq_info = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
+    seq_info = utils.slice_with_mracquistiontype(seq_info, '2D')  # keep 2D images
+
+    # in case of multiband sequence, SBRef images may be generated
+    # therefore, we need to deal with them beforehand
+    seq_sbref = utils.slice_with_seriesdescription(seq_info, '.*_SBRef$')
+    idx = 0
+    for row_idx, seq in seq_sbref.iterrows():
+        idx += 1
+        vol = seq['Volume']
+        vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
+        vol.bidsfields['ses'] = '01'
+        vol.bidsfields['tag'] = 'func'
+        vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+        vol.bidsfields['run'] = idx
+        vol.bidsfields['suffix'] = 'sbref'
+        seq_info = seq_info.drop(row_idx)
+
+    # seperate magnitude & phase images
+    0
+
+########################################################################################################################
 def run(volume_list: list[Volume]):
 
     log.info(f'starting decision tree for "Siemens"... ')
@@ -144,7 +167,7 @@ def run(volume_list: list[Volume]):
         ['.*mp2rage.*'        , 'mprage' ],  # mp2rage WIP
         ['^tse_vfl$'          , 'tse_vfl'],  # 3DT2 space & 3DFLAIR space_ir
         ['.*diff.*'           , 'diff'   ],  # diffusion
-        # ['(bold)|(pace)'    , 'bold'   ],  # bold fmri
+        ['.*(bold)|(pace).*'  , 'bold'   ],  # bold fmri
         # ['gre_field_mapping', 'fmap'   ],  # dual echo field map
         # ['^gre$'            , 'gre'    ],  # FLASH
         # ['^icm_gre$'        , 'gre'    ],  # FLASH specific at ICM, with better phase reconstruction, will be used for QSM
