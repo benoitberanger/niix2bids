@@ -132,11 +132,44 @@ def bold(df: pandas.DataFrame, seq_regex: str):
         vol.bidsfields['tag'] = 'func'
         vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
         vol.bidsfields['run'] = idx
+        if not pandas.isna(seq['EchoNumber']):
+            vol.bidsfields['echo'] = int(seq['EchoNumber'])
         vol.bidsfields['suffix'] = 'sbref'
         seq_info = seq_info.drop(row_idx)
 
-    # seperate magnitude & phase images
-    0
+    # separate magnitude & phase images
+
+    # magnitude
+    mag = utils.slice_with_imagetype(seq_info,'M')
+    idx = 0
+    for row_idx, seq in mag.iterrows():
+        idx += 1
+        vol = seq['Volume']
+        vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
+        vol.bidsfields['ses'] = '01'
+        vol.bidsfields['tag'] = 'func'
+        vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+        vol.bidsfields['run'] = idx
+        if not pandas.isna(seq['EchoNumber']):
+            vol.bidsfields['echo'] = int(seq['EchoNumber'])
+        vol.bidsfields['suffix'] = 'bold'
+        seq_info = seq_info.drop(row_idx)
+
+    # phase
+    pha = utils.slice_with_imagetype(seq_info,'P')
+    idx = 0
+    for row_idx, seq in pha.iterrows():
+        idx += 1
+        vol = seq['Volume']
+        vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
+        vol.bidsfields['ses'] = '01'
+        vol.bidsfields['tag'] = 'func'
+        vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+        vol.bidsfields['run'] = idx
+        if not pandas.isna(seq['EchoNumber']):
+            vol.bidsfields['echo'] = int(seq['EchoNumber'])
+        vol.bidsfields['suffix'] = 'pha'
+        seq_info = seq_info.drop(row_idx)
 
 ########################################################################################################################
 def run(volume_list: list[Volume]):
