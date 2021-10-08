@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 ########################################################################################################################
-def mprage(df: pandas.DataFrame, seq_regex: str):
+def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
     seq_info = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
     seq_info = utils.slice_with_mracquistiontype(seq_info, '3D')  # keep 3D images
 
@@ -53,7 +53,7 @@ def mprage(df: pandas.DataFrame, seq_regex: str):
 
 
 ########################################################################################################################
-def tse_vfl(df: pandas.DataFrame, seq_regex: str):
+def tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
     seq_info = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
     seq_info = utils.slice_with_mracquistiontype(seq_info, '3D')  # keep 3D images
 
@@ -87,7 +87,7 @@ def tse_vfl(df: pandas.DataFrame, seq_regex: str):
 
 
 ########################################################################################################################
-def diff(df: pandas.DataFrame, seq_regex: str):
+def diff(df: pandas.DataFrame, seq_regex: str) -> None:
     seq_info = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
     seq_info = utils.slice_with_mracquistiontype(seq_info, '2D')  # keep 2D images
 
@@ -126,7 +126,7 @@ def diff(df: pandas.DataFrame, seq_regex: str):
 
 
 ########################################################################################################################
-def bold(df: pandas.DataFrame, seq_regex: str):
+def bold(df: pandas.DataFrame, seq_regex: str) -> None:
     seq_info = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
     seq_info = utils.slice_with_mracquistiontype(seq_info, '2D')  # keep 2D images
 
@@ -184,7 +184,7 @@ def bold(df: pandas.DataFrame, seq_regex: str):
 
 
 ########################################################################################################################
-def fmap(df: pandas.DataFrame, seq_regex: str):
+def fmap(df: pandas.DataFrame, seq_regex: str) -> None:
     seq_info = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
     seq_info = utils.slice_with_mracquistiontype(seq_info, '2D')  # keep 2D images
 
@@ -193,7 +193,7 @@ def fmap(df: pandas.DataFrame, seq_regex: str):
 
 
 ########################################################################################################################
-def run(volume_list: list[Volume]):
+def run(volume_list: list[Volume]) -> None:
 
     log.info(f'starting decision tree for "Siemens"... ')
 
@@ -208,6 +208,7 @@ def run(volume_list: list[Volume]):
 
     # checks
     utils.assert_is_dcm2niix(df)
+    utils.assert_has_patientname(df)
     utils.assert_key_val(df, "Modality"    , "MR"     )
     utils.assert_key_val(df, "Manufacturer", "Siemens")
 
