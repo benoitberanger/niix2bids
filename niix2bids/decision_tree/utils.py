@@ -4,7 +4,7 @@ import sys      # to stop script execution on case of error
 import re       # regular expressions
 
 # dependency modules
-import pandas
+import pandas   # for DataFrame
 
 # local modules
 from niix2bids.classes import Volume
@@ -56,18 +56,23 @@ def assert_key_val(df: pandas.DataFrame, key: str, value: str) -> None:
 
 
 ########################################################################################################################
-def slice_with_seqname(df: pandas.DataFrame, seq_regex: str) -> pandas.DataFrame:
-    return df[df['PulseSequenceDetails'].str.match(seq_regex)]
+def slice_with_seqname(df: pandas.DataFrame, regex: str) -> pandas.DataFrame:
+    return df[df['PulseSequenceDetails'].str.match(regex)]
 
 
 ########################################################################################################################
-def slice_with_seriesdescription(df: pandas.DataFrame, seq_regex: str) -> pandas.DataFrame:
-    return df[df['SeriesDescription'].str.match(seq_regex)]
+def slice_with_seriesdescription(df: pandas.DataFrame, regex: str) -> pandas.DataFrame:
+    return df[df['SeriesDescription'].str.match(regex)]
 
 
 ########################################################################################################################
-def slice_with_seqvariant(df: pandas.DataFrame, seq_regex: str) -> pandas.DataFrame:
-    return df[df['SequenceName'].str.match(seq_regex)]
+def slice_with_seqvariant(df: pandas.DataFrame, regex: str) -> pandas.DataFrame:
+    return df[df['SequenceName'].str.match(regex)]
+
+
+########################################################################################################################
+def slice_with_mracquistiontype(df: pandas.DataFrame, regex: str) -> pandas.DataFrame:
+    return df[df['MRAcquisitionType'].str.match(regex)]
 
 
 ########################################################################################################################
