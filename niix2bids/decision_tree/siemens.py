@@ -171,6 +171,13 @@ def bold(df: pandas.DataFrame, seq_regex: str):
         vol.bidsfields['suffix'] = 'pha'
         seq_info = seq_info.drop(row_idx)
 
+
+########################################################################################################################
+def fmap(df: pandas.DataFrame, seq_regex: str):
+    seq_info = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
+    seq_info = utils.slice_with_mracquistiontype(seq_info, '2D')  # keep 2D images
+
+
 ########################################################################################################################
 def run(volume_list: list[Volume]):
 
@@ -201,7 +208,7 @@ def run(volume_list: list[Volume]):
         ['^tse_vfl$'          , 'tse_vfl'],  # 3DT2 space & 3DFLAIR space_ir
         ['.*diff.*'           , 'diff'   ],  # diffusion
         ['.*(bold)|(pace).*'  , 'bold'   ],  # bold fmri
-        # ['gre_field_mapping', 'fmap'   ],  # dual echo field map
+        ['^gre_field_mapping$', 'fmap'   ],  # dual echo field map, with pre-substracted phase
         # ['^gre$'            , 'gre'    ],  # FLASH
         # ['^icm_gre$'        , 'gre'    ],  # FLASH specific at ICM, with better phase reconstruction, will be used for QSM
         # ['^tse$'            , 'tse'    ],  # tse, usually AX_2DT1 or AX_2DT2
