@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 ########################################################################################################################
 def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
+    seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
     seqinfo = utils.slice_with_mracquistiontype(seqinfo, '3D')  # keep 3D images
 
     if seqinfo.empty:  # jus tot run the code faster
@@ -58,7 +58,7 @@ def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
 
 ########################################################################################################################
 def tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
+    seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
     seqinfo = utils.slice_with_mracquistiontype(seqinfo, '3D')  # keep 3D images
 
     if seqinfo.empty:  # jus tot run the code faster
@@ -96,7 +96,7 @@ def tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
 
 ########################################################################################################################
 def diff(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
+    seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
     seqinfo = utils.slice_with_mracquistiontype(seqinfo, '2D')  # keep 2D images
 
     if seqinfo.empty:  # jus tot run the code faster
@@ -139,7 +139,7 @@ def diff(df: pandas.DataFrame, seq_regex: str) -> None:
 
 ########################################################################################################################
 def bold(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
+    seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
     seqinfo = utils.slice_with_mracquistiontype(seqinfo, '2D')  # keep 2D images
 
     if seqinfo.empty:  # jus tot run the code faster
@@ -167,7 +167,7 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
     # separate magnitude & phase images
 
     # magnitude
-    seqinfo_mag = utils.slice_with_imagetype(seqinfo,'P')
+    seqinfo_mag = utils.slice_with_imagetype(seqinfo,'M')
     for _, desc_grp in seqinfo_mag.groupby('SeriesDescription'):
         run_idx = 0
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
@@ -203,7 +203,7 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
 
 ########################################################################################################################
 def fmap(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_seqname(df, seq_regex)            # get list of corresponding sequence
+    seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
     seqinfo = utils.slice_with_mracquistiontype(seqinfo, '2D')  # keep 2D images
 
     if seqinfo.empty:  # jus tot run the code faster
