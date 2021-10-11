@@ -2,6 +2,8 @@
 import logging  # logging lib (terminal & file)
 
 # dependency modules
+import zipfile
+
 import pandas   # for DataFrame
 
 # local modules
@@ -20,13 +22,20 @@ def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
     if seqinfo.empty:  # jus tot run the code faster
         return
 
+    seqinfo_mag   = utils.slice_with_imagetype(seqinfo,'M')
+    seqinfo_T1map = utils.slice_with_imagetype(seqinfo,'T1 MAP')
+    seqinfo_pha   = utils.slice_with_imagetype(seqinfo,'P')
+    if not seqinfo_pha.empty:
+        log.warning(f"mp(2)rage part-phase not coded yet. Be careful !")
+    seqinfo = pandas.concat([seqinfo_mag, seqinfo_T1map])
+
     # in case of mp2rage, there are 3 (or 4 wih T1map) images generated
     # the SeriesDescription is automatically generated such as ProtocalName + suffix, where suffix = _INV1, _INV2,
     # _UNI_Images (and _T1_Images)
-    suffix_regex = ['.*_INV1$', '.*_INV2$', '.*_T1_Images$', '.*_UNI_Images$']
-    suffix_list  = ['inv1'    ,  'inv2'   , 'T1map'        , 'UNIT1'         ]
-    for suffix in suffix_regex:
-        seq_suffix = utils.slice_with_seriesdescription(seqinfo, suffix)
+    descr_regex_list = ['.*_INV1$', '.*_INV2$', '.*_T1_Images$', '.*_UNI_Images$']
+    suffix_list      = ['MP2RAGE' ,  'MP2RAGE', 'T1map'        , 'UNIT1'         ]
+    for descr_regex in descr_regex_list:
+        seq_suffix = utils.slice_with_seriesdescription(seqinfo, descr_regex)
         for _, desc_grp in seq_suffix.groupby('SeriesDescription'):
             run_idx = 0
             for _, ser_grp in desc_grp.groupby('SeriesNumber'):
@@ -38,7 +47,11 @@ def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
                     vol.bidsfields['tag'] = 'anat'
                     vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                     vol.bidsfields['run'] = run_idx
-                    vol.bidsfields['suffix'] = suffix_list[suffix_regex.index(suffix)]
+                    suffix = suffix_list[descr_regex_list.index(descr_regex)]
+                    if suffix == 'MP2RAGE':
+                        # _inv-<index>[_part-<label>]_MP2RAGE.nii
+                        vol.bidsfields['inv'] = descr_regex_list.index(descr_regex) + 1
+                    vol.bidsfields['suffix'] = suffix
                     seqinfo = seqinfo.drop(row_idx)
 
     # now that we have dealt with the mp2rage@siemens suffix, we can continue
@@ -273,8 +286,8 @@ def run(volume_list: list[Volume]) -> None:
         ['.*diff.*'           , 'diff'   ],  # diffusion
         ['.*(bold)|(pace).*'  , 'bold'   ],  # bold fmri
         ['^gre_field_mapping$', 'fmap'   ],  # dual echo field map, with pre-substracted phase
-        # ['^gre$'            , 'gre'    ],  # FLASH
-        # ['^icm_gre$'        , 'gre'    ],  # FLASH specific at ICM, with better phase reconstruction, will be used for QSM
+        # ['^gre$'              , 'gre'    ],  # FLASH
+        # ['^icm_gre$'          , 'gre'    ],  # FLASH specific at ICM, with better phase reconstruction, will be used for QSM
         # ['^tse$'            , 'tse'    ],  # tse, usually AX_2DT1 or AX_2DT2
         # ['ep2d_se'          , 'ep2d_se'],  # SpinEcho EPI
         # ['asl'              , 'asl'    ],  # 2D or 3D : ASL, pASL, pCASL
