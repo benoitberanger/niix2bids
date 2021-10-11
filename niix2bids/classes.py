@@ -50,13 +50,17 @@ class Volume:
     def __init__(self, path: str):
 
         # separate name and extension
-        name, ext = os.path.splitext(path)
-        if ext != ".nii":
+        root, ext = os.path.splitext(path)
+        if ext not in [".nii", ".gz"]:
             raise RuntimeError(f"not a .nii file : {path}")
+        if ext == ".gz":
+            jsonfile = os.path.splitext(root)[0] + ".json"
+        else:
+            jsonfile = os.path.splitext(path)[0] + ".json"
 
         # instance filling
         self.nii        = Nii(path)
-        self.json       = Json(name + ".json")
+        self.json       = Json(jsonfile)
         self.seqparam   = dict
         self.bidsfields = {}
 

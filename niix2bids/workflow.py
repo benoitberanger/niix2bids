@@ -70,7 +70,7 @@ def fetch_all_files(in_dir: str) -> list[str]:
 def isolate_nii_files(in_list: list[str]) -> list[str]:
     log = logging.getLogger(__name__)
 
-    r = re.compile(r".*nii$")
+    r = re.compile(r"(.*nii$)|(.*nii.gz$)$")
     file_list_nii = list(filter(r.match, in_list))
 
     log.info(f"found {len(file_list_nii)} nifti files")
@@ -87,7 +87,11 @@ def check_if_json_exists(file_list_nii: list[str]) -> tuple[list[str], list[str]
 
     file_list_json = []
     for file in file_list_nii:
-        jsonfile = os.path.splitext(file)[0] + ".json"
+        root, ext = os.path.splitext(file)
+        if ext == ".gz":
+            jsonfile = os.path.splitext(root)[0] + ".json"
+        else:
+            jsonfile = os.path.splitext(file)[0] + ".json"
         if not os.path.exists(jsonfile):
             log.warning(f"this file has no .json associated : {file}")
             file_list_nii.remove(file)
