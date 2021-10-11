@@ -17,10 +17,9 @@ log = logging.getLogger(__name__)
 ########################################################################################################################
 def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
-    seqinfo = utils.slice_with_mracquistiontype(seqinfo, '3D')  # keep 3D images
-
-    if seqinfo.empty:  # jus tot run the code faster
+    if seqinfo.empty:                                           # jus tot run the code faster
         return
+    seqinfo = utils.slice_with_mracquistiontype(seqinfo, '3D')  # keep 3D images
 
     # here is a example of ImageType for all images for 1 sequence :
     # "ImageType": ["ORIGINAL", "PRIMARY", "M", "ND", "NORM"], <--- inv1
@@ -77,10 +76,9 @@ def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
 ########################################################################################################################
 def tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
-    seqinfo = utils.slice_with_mracquistiontype(seqinfo, '3D')  # keep 3D images
-
-    if seqinfo.empty:  # jus tot run the code faster
+    if seqinfo.empty:                                           # jus tot run the code faster
         return
+    seqinfo = utils.slice_with_mracquistiontype(seqinfo, '3D')  # keep 3D images
 
     seqinfo_T2w   = utils.slice_with_seqvariant(seqinfo, '_spc_')
     seqinfo_FLAIR = utils.slice_with_seqvariant(seqinfo, '_spcir_')
@@ -115,10 +113,10 @@ def tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
 ########################################################################################################################
 def diff(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
-    seqinfo = utils.slice_with_mracquistiontype(seqinfo, '2D')  # keep 2D images
-
-    if seqinfo.empty:  # jus tot run the code faster
+    if seqinfo.empty:                                           # jus tot run the code faster
         return
+    seqinfo = utils.slice_with_imagetype_original(seqinfo)      # keep ORIGINAL images, discard ADC, FA, ColFA, ...
+    seqinfo = utils.slice_with_mracquistiontype(seqinfo, '2D')  # keep 2D images
 
     # in case of multiband sequence, SBRef images may be generated
     # therefore, we need to deal with them beforehand
@@ -158,10 +156,9 @@ def diff(df: pandas.DataFrame, seq_regex: str) -> None:
 ########################################################################################################################
 def bold(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
-    seqinfo = utils.slice_with_mracquistiontype(seqinfo, '2D')  # keep 2D images
-
-    if seqinfo.empty:  # jus tot run the code faster
+    if seqinfo.empty:                                           # jus tot run the code faster
         return
+    seqinfo = utils.slice_with_mracquistiontype(seqinfo, '2D')  # keep 2D images
 
     # in case of multiband sequence, SBRef images may be generated
     # therefore, we need to deal with them beforehand
@@ -222,10 +219,9 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
 ########################################################################################################################
 def fmap(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
-    seqinfo = utils.slice_with_mracquistiontype(seqinfo, '2D')  # keep 2D images
-
-    if seqinfo.empty:  # jus tot run the code faster
+    if seqinfo.empty:                                           # jus tot run the code faster
         return
+    seqinfo = utils.slice_with_mracquistiontype(seqinfo, '2D')  # keep 2D images
 
     # separate magnitude & phase images
 
@@ -259,6 +255,14 @@ def fmap(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol.bidsfields['run'] = run_idx
                 vol.bidsfields['suffix'] = 'phasediff'
 
+
+########################################################################################################################
+def gre(df: pandas.DataFrame, seq_regex: str) -> None:
+    seqinfo = utils.slice_with_seqname(df, seq_regex)  # get list of corresponding sequence
+    if seqinfo.empty:                                  # jus tot run the code faster
+        return
+
+
 ########################################################################################################################
 def run(volume_list: list[Volume]) -> None:
 
@@ -270,8 +274,9 @@ def run(volume_list: list[Volume]) -> None:
     # to pandas.DataFrame object is like table in matlab, with much more embedded methods
     df = pandas.DataFrame(list_param)
 
-    # eliminate sequences whiteout PulseSequenceDetails, we cannot parse them
-    df = df[ df['PulseSequenceDetails'].isna() == False]
+    # eliminate sequences with missing parameters, we cannot parse them
+    df = df[ df['PulseSequenceDetails'].isna() == False ]
+    df = df[ df['MRAcquisitionType'   ].isna() == False ]
 
     # checks
     utils.assert_is_dcm2niix(df)
@@ -291,8 +296,8 @@ def run(volume_list: list[Volume]) -> None:
         ['.*diff.*'           , 'diff'   ],  # diffusion
         ['.*(bold)|(pace).*'  , 'bold'   ],  # bold fmri
         ['^gre_field_mapping$', 'fmap'   ],  # dual echo field map, with pre-substracted phase
-        # ['^gre$'              , 'gre'    ],  # FLASH
-        # ['^icm_gre$'          , 'gre'    ],  # FLASH specific at ICM, with better phase reconstruction, will be used for QSM
+        ['^gre$'              , 'gre'    ],  # FLASH
+        ['^icm_gre$'          , 'gre'    ],  # FLASH specific at ICM, with better phase reconstruction, will be used for QSM
         # ['^tse$'            , 'tse'    ],  # tse, usually AX_2DT1 or AX_2DT2
         # ['ep2d_se'          , 'ep2d_se'],  # SpinEcho EPI
         # ['asl'              , 'asl'    ],  # 2D or 3D : ASL, pASL, pCASL

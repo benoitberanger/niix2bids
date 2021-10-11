@@ -103,6 +103,16 @@ def slice_with_imagetype(df: pandas.DataFrame, type: str) -> pandas.DataFrame:
 
 
 ########################################################################################################################
+def slice_with_imagetype_original(df: pandas.DataFrame) -> pandas.DataFrame:
+    """
+    ImageType example :
+    ['ORIGINAL', 'PRIMARY', 'M', 'MB', 'TE1', 'ND', 'MOSAIC']
+     >>here<<
+     """
+    return df[df['ImageType'].apply(lambda x: x[0] == "ORIGINAL")]
+
+
+########################################################################################################################
 def clean_name(input_str: str) -> str:
     """
     remove all non-alphanumerical character
