@@ -305,6 +305,42 @@ def gre(df: pandas.DataFrame, seq_regex: str) -> None:
 
 
 ########################################################################################################################
+def tse(df: pandas.DataFrame, seq_regex: str) -> None:
+    seqinfo = utils.slice_with_seqname(df, seq_regex)  # get list of corresponding sequence
+    if seqinfo.empty:                                  # just to run the code faster
+        return
+
+    seqinfo_T2w   = utils.slice_with_seqvariant(seqinfo, '_tse')
+    seqinfo_FLAIR = utils.slice_with_seqvariant(seqinfo, '_tir')
+
+    for _, desc_grp in seqinfo_T2w.groupby('SeriesDescription'):
+        run_idx = 0
+        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
+            run_idx += 1
+            for row_idx, seq in ser_grp.iterrows():
+                vol = seq['Volume']
+                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
+                vol.bidsfields['ses'] = '01'
+                vol.bidsfields['tag'] = 'anat'
+                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+                vol.bidsfields['run'] = run_idx
+                vol.bidsfields['suffix'] = 'T2w'
+
+    for _, desc_grp in seqinfo_FLAIR.groupby('SeriesDescription'):
+        run_idx = 0
+        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
+            run_idx += 1
+            for row_idx, seq in ser_grp.iterrows():
+                vol = seq['Volume']
+                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
+                vol.bidsfields['ses'] = '01'
+                vol.bidsfields['tag'] = 'anat'
+                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+                vol.bidsfields['run'] = run_idx
+                vol.bidsfields['suffix'] = 'FLAIR'
+
+
+########################################################################################################################
 def run(volume_list: list[Volume]) -> None:
 
     log.info(f'starting decision tree for "Siemens"... ')
@@ -340,7 +376,7 @@ def run(volume_list: list[Volume]) -> None:
         ['^gre_field_mapping$', 'fmap'   ],  # dual echo field map, with pre-substracted phase
         ['^gre$'              , 'gre'    ],  # FLASH
         ['^icm_gre$'          , 'gre'    ],  # FLASH specific at ICM, with better phase reconstruction, will be used for QSM
-        # ['^tse$'            , 'tse'    ],  # tse, usually AX_2DT1 or AX_2DT2
+        ['^tse$'              , 'tse'    ],  # tse, usually AX_2DT1 or AX_2DT2
         # ['ep2d_se'          , 'ep2d_se'],  # SpinEcho EPI
         # ['asl'              , 'asl'    ],  # 2D or 3D : ASL, pASL, pCASL
         # ['medic'            , 'medic'  ],  # dual echo T2*
