@@ -209,6 +209,37 @@ def fmap(df: pandas.DataFrame, seq_regex: str) -> None:
     if seqinfo.empty:  # jus tot run the code faster
         return
 
+    # separate magnitude & phase images
+
+    # magnitude
+    seqinfo_mag = utils.slice_with_imagetype(seqinfo,'M')
+    for _, desc_grp in seqinfo_mag.groupby('SeriesDescription'):
+        run_idx = 0
+        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
+            run_idx += 1
+            for row_idx, seq in ser_grp.iterrows():
+                vol = seq['Volume']
+                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
+                vol.bidsfields['ses'] = '01'
+                vol.bidsfields['tag'] = 'fmap'
+                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+                vol.bidsfields['run'] = run_idx
+                vol.bidsfields['suffix'] = f"magnitude{int(seq['EchoNumber'])}"  # suffix has to be _magntude1 _magnitude2
+
+    # phase
+    seqinfo_pha = utils.slice_with_imagetype(seqinfo,'P')
+    for _, desc_grp in seqinfo_pha.groupby('SeriesDescription'):
+        run_idx = 0
+        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
+            run_idx += 1
+            for row_idx, seq in ser_grp.iterrows():
+                vol = seq['Volume']
+                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
+                vol.bidsfields['ses'] = '01'
+                vol.bidsfields['tag'] = 'fmap'
+                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+                vol.bidsfields['run'] = run_idx
+                vol.bidsfields['suffix'] = 'phasediff'
 
 ########################################################################################################################
 def run(volume_list: list[Volume]) -> None:
