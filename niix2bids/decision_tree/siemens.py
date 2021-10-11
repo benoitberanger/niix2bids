@@ -22,6 +22,11 @@ def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
     if seqinfo.empty:  # jus tot run the code faster
         return
 
+    # here is a example of ImageType for all images for 1 sequence :
+    # "ImageType": ["ORIGINAL", "PRIMARY", "M", "ND", "NORM"], <--- inv1
+    # "ImageType": ["ORIGINAL", "PRIMARY", "M", "ND", "NORM"], <--- inv2
+    # "ImageType": ["DERIVED", "PRIMARY", "T1 MAP", "ND"],     <--- T1map
+    # "ImageType": ["DERIVED", "PRIMARY", "M", "ND", "UNI"],   <--- UNIT1
     seqinfo_mag   = utils.slice_with_imagetype(seqinfo,'M')
     seqinfo_T1map = utils.slice_with_imagetype(seqinfo,'T1 MAP')
     seqinfo_pha   = utils.slice_with_imagetype(seqinfo,'P')
