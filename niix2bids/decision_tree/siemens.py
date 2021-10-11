@@ -2,8 +2,6 @@
 import logging  # logging lib (terminal & file)
 
 # dependency modules
-import zipfile
-
 import pandas   # for DataFrame
 
 # local modules
@@ -26,9 +24,9 @@ def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
     # "ImageType": ["ORIGINAL", "PRIMARY", "M", "ND", "NORM"], <--- inv2
     # "ImageType": ["DERIVED", "PRIMARY", "T1 MAP", "ND"],     <--- T1map
     # "ImageType": ["DERIVED", "PRIMARY", "M", "ND", "UNI"],   <--- UNIT1
-    seqinfo_mag   = utils.slice_with_imagetype(seqinfo,'M')
-    seqinfo_T1map = utils.slice_with_imagetype(seqinfo,'T1 MAP')
-    seqinfo_pha   = utils.slice_with_imagetype(seqinfo,'P')
+    seqinfo_mag   = utils.slice_with_imagetype(seqinfo, 'M')
+    seqinfo_T1map = utils.slice_with_imagetype(seqinfo, 'T1 MAP')
+    seqinfo_pha   = utils.slice_with_imagetype(seqinfo, 'P')
     if not seqinfo_pha.empty:
         log.warning(f"mp(2)rage part-phase not coded yet. Be careful !")
     seqinfo = pandas.concat([seqinfo_mag, seqinfo_T1map])
@@ -182,7 +180,7 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
     # separate magnitude & phase images
 
     # magnitude
-    seqinfo_mag = utils.slice_with_imagetype(seqinfo,'M')
+    seqinfo_mag = utils.slice_with_imagetype(seqinfo, 'M')
     for _, desc_grp in seqinfo_mag.groupby('SeriesDescription'):
         run_idx = 0
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
@@ -199,7 +197,7 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol.bidsfields['suffix'] = 'bold'
 
     # phase
-    seqinfo_pha = utils.slice_with_imagetype(seqinfo,'P')
+    seqinfo_pha = utils.slice_with_imagetype(seqinfo, 'P')
     for _, desc_grp in seqinfo_pha.groupby('SeriesDescription'):
         run_idx = 0
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
@@ -226,7 +224,7 @@ def fmap(df: pandas.DataFrame, seq_regex: str) -> None:
     # separate magnitude & phase images
 
     # magnitude
-    seqinfo_mag = utils.slice_with_imagetype(seqinfo,'M')
+    seqinfo_mag = utils.slice_with_imagetype(seqinfo, 'M')
     for _, desc_grp in seqinfo_mag.groupby('SeriesDescription'):
         run_idx = 0
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
@@ -238,10 +236,11 @@ def fmap(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol.bidsfields['tag'] = 'fmap'
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                vol.bidsfields['suffix'] = f"magnitude{int(seq['EchoNumber'])}"  # suffix has to be _magntude1 _magnitude2
+                # suffix has to be _magnitude1 _magnitude2
+                vol.bidsfields['suffix'] = f"magnitude{int(seq['EchoNumber'])}"
 
     # phase
-    seqinfo_pha = utils.slice_with_imagetype(seqinfo,'P')
+    seqinfo_pha = utils.slice_with_imagetype(seqinfo, 'P')
     for _, desc_grp in seqinfo_pha.groupby('SeriesDescription'):
         run_idx = 0
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
@@ -265,7 +264,7 @@ def gre(df: pandas.DataFrame, seq_regex: str) -> None:
     # separate magnitude & phase images
 
     # magnitude
-    seqinfo_mag = utils.slice_with_imagetype(seqinfo,'M')
+    seqinfo_mag = utils.slice_with_imagetype(seqinfo, 'M')
     for _, desc_grp in seqinfo_mag.groupby('SeriesDescription'):
         run_idx = 0
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
@@ -285,7 +284,7 @@ def gre(df: pandas.DataFrame, seq_regex: str) -> None:
                     vol.bidsfields['suffix'] = 'T2starw'
 
     # magnitude
-    seqinfo_pha = utils.slice_with_imagetype(seqinfo,'P')
+    seqinfo_pha = utils.slice_with_imagetype(seqinfo, 'P')
     for _, desc_grp in seqinfo_pha.groupby('SeriesDescription'):
         run_idx = 0
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
@@ -317,8 +316,8 @@ def run(volume_list: list[Volume]) -> None:
     df = pandas.DataFrame(list_param)
 
     # eliminate sequences with missing parameters, we cannot parse them
-    df = df[ df['PulseSequenceDetails'].isna() == False ]
-    df = df[ df['MRAcquisitionType'   ].isna() == False ]
+    df = df[ df['PulseSequenceDetails'].isna() == False ]  # this is the basic sequence name : %SiemensSeq%_gre
+    df = df[ df['MRAcquisitionType'   ].isna() == False ]  # '2D', '3D'
 
     # checks
     utils.assert_is_dcm2niix(df)
@@ -330,6 +329,7 @@ def run(volume_list: list[Volume]) -> None:
     # %CustomerSeq%_cmrr_mbep2d_bold -> cmrr_mbep2d_bold
     df['PulseSequenceDetails'] = df['PulseSequenceDetails'].apply(lambda s: s.rsplit("%_")[1])
 
+    # the approach is simple : the sequence name ('gre') defines which decision tree to apply
     list_seq_regex = [
         # [seq_regex             fcn name]
         ['^tfl$'              , 'mprage' ],  # mprage & mp2rage
@@ -346,12 +346,15 @@ def run(volume_list: list[Volume]) -> None:
         # ['medic'            , 'medic'  ],  # dual echo T2*
     ]
 
-    df_by_subject = df.groupby('PatientName')  # subject by subject sequence group
-    for name, group in df_by_subject:
-        for seq_regex, fcn_name in list_seq_regex:
+    # subject by subject sequence group
+    df_by_subject = df.groupby('PatientName')
+
+    for name, group in df_by_subject:               # loop over subjects
+        for seq_regex, fcn_name in list_seq_regex:  # loop over sequence decision tree
             func = eval(fcn_name)   # fetch the name of the function to call dynamically
             func(group, seq_regex)  # execute the function
 
+    # print for dev
     for vol in volume_list:
-        if bool(vol.bidsfields):
+        if bool(vol.bidsfields):  # print only the volumes correctly filled
             print(vol.bidsfields)
