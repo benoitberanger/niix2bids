@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 ########################################################################################################################
 def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
-    if seqinfo.empty:                                           # jus tot run the code faster
+    if seqinfo.empty:                                           # just to run the code faster
         return
     seqinfo = utils.slice_with_mracquistiontype(seqinfo, '3D')  # keep 3D images
 
@@ -76,7 +76,7 @@ def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
 ########################################################################################################################
 def tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
-    if seqinfo.empty:                                           # jus tot run the code faster
+    if seqinfo.empty:                                           # just to run the code faster
         return
     seqinfo = utils.slice_with_mracquistiontype(seqinfo, '3D')  # keep 3D images
 
@@ -113,7 +113,7 @@ def tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
 ########################################################################################################################
 def diff(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
-    if seqinfo.empty:                                           # jus tot run the code faster
+    if seqinfo.empty:                                           # just to run the code faster
         return
     seqinfo = utils.slice_with_imagetype_original(seqinfo)      # keep ORIGINAL images, discard ADC, FA, ColFA, ...
     seqinfo = utils.slice_with_mracquistiontype(seqinfo, '2D')  # keep 2D images
@@ -156,7 +156,7 @@ def diff(df: pandas.DataFrame, seq_regex: str) -> None:
 ########################################################################################################################
 def bold(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
-    if seqinfo.empty:                                           # jus tot run the code faster
+    if seqinfo.empty:                                           # just to run the code faster
         return
     seqinfo = utils.slice_with_mracquistiontype(seqinfo, '2D')  # keep 2D images
 
@@ -219,7 +219,7 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
 ########################################################################################################################
 def fmap(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
-    if seqinfo.empty:                                           # jus tot run the code faster
+    if seqinfo.empty:                                           # just to run the code faster
         return
     seqinfo = utils.slice_with_mracquistiontype(seqinfo, '2D')  # keep 2D images
 
@@ -259,8 +259,50 @@ def fmap(df: pandas.DataFrame, seq_regex: str) -> None:
 ########################################################################################################################
 def gre(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty:                                  # jus tot run the code faster
+    if seqinfo.empty:                                  # just to run the code faster
         return
+
+    # separate magnitude & phase images
+
+    # magnitude
+    seqinfo_mag = utils.slice_with_imagetype(seqinfo,'M')
+    for _, desc_grp in seqinfo_mag.groupby('SeriesDescription'):
+        run_idx = 0
+        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
+            run_idx += 1
+            for row_idx, seq in ser_grp.iterrows():
+                vol = seq['Volume']
+                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
+                vol.bidsfields['ses'] = '01'
+                vol.bidsfields['tag'] = 'anat'
+                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+                vol.bidsfields['run'] = run_idx
+                vol.bidsfields['part'] = 'mag'
+                if not pandas.isna(seq['EchoNumber']):
+                    vol.bidsfields['echo'] = int(seq['EchoNumber'])
+                    vol.bidsfields['suffix'] = 'MEGRE'
+                else:
+                    vol.bidsfields['suffix'] = 'T2starw'
+
+    # magnitude
+    seqinfo_pha = utils.slice_with_imagetype(seqinfo,'P')
+    for _, desc_grp in seqinfo_pha.groupby('SeriesDescription'):
+        run_idx = 0
+        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
+            run_idx += 1
+            for row_idx, seq in ser_grp.iterrows():
+                vol = seq['Volume']
+                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
+                vol.bidsfields['ses'] = '01'
+                vol.bidsfields['tag'] = 'anat'
+                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+                vol.bidsfields['run'] = run_idx
+                vol.bidsfields['part'] = 'pha'
+                if not pandas.isna(seq['EchoNumber']):
+                    vol.bidsfields['echo'] = int(seq['EchoNumber'])
+                    vol.bidsfields['suffix'] = 'MEGRE'
+                else:
+                    vol.bidsfields['suffix'] = 'T2starw'
 
 
 ########################################################################################################################
