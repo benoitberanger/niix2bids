@@ -128,6 +128,8 @@ def assemble_bids_key_value_pairs(bidsfields: dict) -> str:
             name = key + '-' + str(value)
         elif key == 'suffix':
             name += '_' + str(value)
+        elif key == 'tag':
+            pass
         else:
             name += '_' + key + '-' + str(value)
 
@@ -143,7 +145,6 @@ def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
             dir_path = os.path.join(
                 out_dir,
                 "sub-" + vol.bidsfields['sub'],
-                "ses-" + vol.bidsfields['ses'],
                 vol.bidsfields["tag"])
 
             # recursive directory creation, and do not raise error if already exists
@@ -176,6 +177,7 @@ def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
                 out_path_bvec = os.path.join(dir_path, out_name + '.bvec')
                 if not os.path.exists(out_path_bvec):
                     os.symlink(in_path_bvec, out_path_bvec)
+
 
 ########################################################################################################################
 def run(args: argparse.Namespace) -> None:

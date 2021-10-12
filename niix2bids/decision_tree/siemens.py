@@ -45,7 +45,6 @@ def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
                 for row_idx, seq in ser_grp.iterrows():
                     vol = seq['Volume']
                     vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                    vol.bidsfields['ses'] = '01'
                     vol.bidsfields['tag'] = 'anat'
                     vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                     vol.bidsfields['run'] = run_idx
@@ -64,7 +63,6 @@ def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
             for row_idx, seq in ser_grp.iterrows():
                 vol = seq['Volume']
                 vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['ses'] = '01'
                 vol.bidsfields['tag'] = 'anat'
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
@@ -88,7 +86,6 @@ def tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
             for row_idx, seq in ser_grp.iterrows():
                 vol = seq['Volume']
                 vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['ses'] = '01'
                 vol.bidsfields['tag'] = 'anat'
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
@@ -101,7 +98,6 @@ def tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
             for row_idx, seq in ser_grp.iterrows():
                 vol = seq['Volume']
                 vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['ses'] = '01'
                 vol.bidsfields['tag'] = 'anat'
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
@@ -126,7 +122,6 @@ def diff(df: pandas.DataFrame, seq_regex: str) -> None:
             for row_idx, seq in ser_grp.iterrows():
                 vol = seq['Volume']
                 vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['ses'] = '01'
                 vol.bidsfields['tag'] = 'dwi'
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
@@ -144,7 +139,6 @@ def diff(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol.check_if_bval_exists()
                 vol.check_if_bvec_exists()
                 vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['ses'] = '01'
                 vol.bidsfields['tag'] = 'dwi'
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
@@ -168,7 +162,6 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
             for row_idx, seq in ser_grp.iterrows():
                 vol = seq['Volume']
                 vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['ses'] = '01'
                 vol.bidsfields['tag'] = 'func'
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
@@ -188,7 +181,6 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
             for row_idx, seq in ser_grp.iterrows():
                 vol = seq['Volume']
                 vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['ses'] = '01'
                 vol.bidsfields['tag'] = 'func'
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
@@ -205,13 +197,12 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
             for row_idx, seq in ser_grp.iterrows():
                 vol = seq['Volume']
                 vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['ses'] = '01'
                 vol.bidsfields['tag'] = 'func'
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
                 if not pandas.isna(seq['EchoNumber']):
                     vol.bidsfields['echo'] = int(seq['EchoNumber'])
-                vol.bidsfields['suffix'] = 'pha'
+                vol.bidsfields['suffix'] = 'phase'
 
 
 ########################################################################################################################
@@ -232,7 +223,6 @@ def fmap(df: pandas.DataFrame, seq_regex: str) -> None:
             for row_idx, seq in ser_grp.iterrows():
                 vol = seq['Volume']
                 vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['ses'] = '01'
                 vol.bidsfields['tag'] = 'fmap'
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
@@ -248,7 +238,6 @@ def fmap(df: pandas.DataFrame, seq_regex: str) -> None:
             for row_idx, seq in ser_grp.iterrows():
                 vol = seq['Volume']
                 vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['ses'] = '01'
                 vol.bidsfields['tag'] = 'fmap'
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
@@ -272,7 +261,6 @@ def gre(df: pandas.DataFrame, seq_regex: str) -> None:
             for row_idx, seq in ser_grp.iterrows():
                 vol = seq['Volume']
                 vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['ses'] = '01'
                 vol.bidsfields['tag'] = 'anat'
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
@@ -292,7 +280,6 @@ def gre(df: pandas.DataFrame, seq_regex: str) -> None:
             for row_idx, seq in ser_grp.iterrows():
                 vol = seq['Volume']
                 vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['ses'] = '01'
                 vol.bidsfields['tag'] = 'anat'
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
@@ -320,7 +307,6 @@ def tse(df: pandas.DataFrame, seq_regex: str) -> None:
             for row_idx, seq in ser_grp.iterrows():
                 vol = seq['Volume']
                 vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['ses'] = '01'
                 vol.bidsfields['tag'] = 'anat'
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
@@ -333,7 +319,6 @@ def tse(df: pandas.DataFrame, seq_regex: str) -> None:
             for row_idx, seq in ser_grp.iterrows():
                 vol = seq['Volume']
                 vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['ses'] = '01'
                 vol.bidsfields['tag'] = 'anat'
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
