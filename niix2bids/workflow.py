@@ -119,6 +119,41 @@ def read_all_json(volume_list: list[Volume]) -> None:
 
 
 ########################################################################################################################
+def assemble_bids_key_value_pairs(bidsfields: dict) -> str:
+
+    i = 0
+    for key, value in bidsfields.items():
+        i += 1
+        if i == 1:
+            name = key + '-' + str(value)
+        elif key == 'suffix':
+            name += '_' + str(value)
+        else:
+            name += '_' + key + '-' + str(value)
+
+    return name
+
+
+########################################################################################################################
+def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
+
+    for vol in volume_list:
+        if bool(vol.bidsfields):  # only process correctly parsed volumes
+
+            dir_path = os.path.join(
+                out_dir,
+                "sub-" + vol.bidsfields['sub'],
+                "ses-" + vol.bidsfields['ses'],
+                vol.bidsfields["tag"])
+
+            # recursive directory creation, and do not raise error if already exists
+            os.makedirs(dir_path, exist_ok=True)
+
+            in_path_nii  = vol.nii.path
+            out_name = assemble_bids_key_value_pairs(vol.bidsfields)
+            # os.symlink()
+
+########################################################################################################################
 def run(args: argparse.Namespace) -> None:
 
     # initialize logger (console & file)
@@ -160,6 +195,7 @@ def run(args: argparse.Namespace) -> None:
     niix2bids.decision_tree.siemens.run(volume_list)
 
     # perform files operations
+    apply_bids_architecture(args.out_dir,volume_list)
 
     # THE END
     sys.exit(0)
