@@ -47,19 +47,25 @@ class Volume:
     instances = []
 
     # ------------------------------------------------------------------------------------------------------------------
-    def __init__(self, path: str):
+    def __init__(self, niipath: str):
 
         # separate name and extension
-        root, ext = os.path.splitext(path)
+        root, ext = os.path.splitext(niipath)
         if ext not in [".nii", ".gz"]:
-            raise RuntimeError(f"not a .nii file : {path}")
+            raise RuntimeError(f"not a .nii file : {niipath}")
         if ext == ".gz":
+            basename = os.path.splitext( os.path.basename(root) )[0]
+            ext      = '.nii.gz'
             jsonfile = os.path.splitext(root)[0] + ".json"
         else:
-            jsonfile = os.path.splitext(path)[0] + ".json"
+            basename = os.path.splitext(os.path.basename(niipath))[0]
+            ext      = '.nii'
+            jsonfile = os.path.splitext(niipath)[0] + ".json"
 
         # instance filling
-        self.nii        = Nii(path)
+        self.basename   = basename
+        self.ext        = ext
+        self.nii        = Nii(niipath)
         self.json       = Json(jsonfile)
         self.seqparam   = dict
         self.bidsfields = {}

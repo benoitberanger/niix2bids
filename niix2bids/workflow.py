@@ -149,9 +149,33 @@ def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
             # recursive directory creation, and do not raise error if already exists
             os.makedirs(dir_path, exist_ok=True)
 
-            in_path_nii  = vol.nii.path
             out_name = assemble_bids_key_value_pairs(vol.bidsfields)
-            # os.symlink()
+
+            # nii
+            in_path_nii = vol.nii.path
+            out_path_nii = os.path.join(dir_path, out_name + vol.ext)
+            if not os.path.exists(out_path_nii):
+                os.symlink(in_path_nii, out_path_nii)
+
+            # json
+            in_path_json = vol.json.path
+            out_path_json = os.path.join(dir_path, out_name + '.json')
+            if not os.path.exists(out_path_json):
+                os.symlink(in_path_json, out_path_json)
+
+            # bval
+            if hasattr(vol, 'bval'):
+                in_path_bval = vol.bval.path
+                out_path_bval = os.path.join(dir_path, out_name + '.bval')
+                if not os.path.exists(out_path_bval):
+                    os.symlink(in_path_bval, out_path_bval)
+
+            # bvec
+            if hasattr(vol, 'bvec'):
+                in_path_bvec = vol.bvec.path
+                out_path_bvec = os.path.join(dir_path, out_name + '.bvec')
+                if not os.path.exists(out_path_bvec):
+                    os.symlink(in_path_bvec, out_path_bvec)
 
 ########################################################################################################################
 def run(args: argparse.Namespace) -> None:
