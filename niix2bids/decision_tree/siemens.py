@@ -163,7 +163,7 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol = seq['Volume']
                 vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['tag'] = 'func'
-                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+                vol.bidsfields['task'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
                 if not pandas.isna(seq['EchoNumber']):
                     vol.bidsfields['echo'] = int(seq['EchoNumber'])
@@ -182,7 +182,7 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol = seq['Volume']
                 vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['tag'] = 'func'
-                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+                vol.bidsfields['task'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
                 if not pandas.isna(seq['EchoNumber']):
                     vol.bidsfields['echo'] = int(seq['EchoNumber'])
@@ -198,7 +198,7 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol = seq['Volume']
                 vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['tag'] = 'func'
-                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+                vol.bidsfields['task'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
                 if not pandas.isna(seq['EchoNumber']):
                     vol.bidsfields['echo'] = int(seq['EchoNumber'])
@@ -264,11 +264,12 @@ def gre(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol.bidsfields['tag'] = 'anat'
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                vol.bidsfields['part'] = 'mag'
                 if not pandas.isna(seq['EchoNumber']):
                     vol.bidsfields['echo'] = int(seq['EchoNumber'])
+                    vol.bidsfields['part'] = 'mag'
                     vol.bidsfields['suffix'] = 'MEGRE'
                 else:
+                    vol.bidsfields['part'] = 'mag'
                     vol.bidsfields['suffix'] = 'T2starw'
 
     # magnitude
@@ -283,11 +284,12 @@ def gre(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol.bidsfields['tag'] = 'anat'
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                vol.bidsfields['part'] = 'pha'
                 if not pandas.isna(seq['EchoNumber']):
                     vol.bidsfields['echo'] = int(seq['EchoNumber'])
+                    vol.bidsfields['part'] = 'phase'
                     vol.bidsfields['suffix'] = 'MEGRE'
                 else:
+                    vol.bidsfields['part'] = 'phase'
                     vol.bidsfields['suffix'] = 'T2starw'
 
 
