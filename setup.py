@@ -6,7 +6,7 @@ with open('README.md',"r") as f:
 
 setuptools.setup(
     name="niix2bids",
-    version=metadata.get_version(),
+    version=metadata.get_niix2bids_version(),
     author='Benoit Beranger',
     author_email='benoit.beranger@icm-institute.org',
     url='https://github.com/benoitberanger/niix2bids.git',

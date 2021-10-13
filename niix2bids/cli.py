@@ -20,7 +20,7 @@ def main():
 
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Create BIDS architecture from nifti files (and .json sidecars)",
-                                     epilog=f"niix2bids version {niix2bids.metadata.get_version()}")
+                                     epilog=f"niix2bids version {niix2bids.metadata.get_niix2bids_version()}")
 
     parser.add_argument("nifti_dir",
                         help="nifti directory that will be parsed and transformed into BIDS architecture."
