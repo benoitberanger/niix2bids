@@ -3,6 +3,7 @@ import logging  # logging lib (terminal & file)
 
 # dependency modules
 import pandas   # for DataFrame
+import nibabel  # to load nifti header
 
 # local modules
 from niix2bids.decision_tree import utils
@@ -169,6 +170,15 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
                     vol.bidsfields['echo'] = int(seq['EchoNumber'])
                 vol.bidsfields['suffix'] = 'sbref'
                 seqinfo = seqinfo.drop(row_idx)
+
+    # only keep 4D data
+    # ex : 1 volume can be acquired quickly to check subject position over time, so discard it, its not "BOLD"
+
+    for row_idx, seq in seqinfo.iterrows():
+        nii = nibabel.load( seq['Volume'].nii.path )
+        if nii.ndim < 4:  # check 4D
+            log.warning(f"non 4D volume, discard it : {seq['Volume'].nii.path}")
+            seqinfo = seqinfo.drop(row_idx)
 
     # separate magnitude & phase images
 

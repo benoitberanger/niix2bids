@@ -162,12 +162,13 @@ def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
             # json
             in_path_json = vol.json.path
             out_path_json = os.path.join(dir_path, out_name + '.json')
+
             if vol.bidsfields['tag'] == 'func':  # for func, the .json file needs to have 'TaskName' field
-                json_dict = vol.seqparam
-                json_dict['TaskName'] = vol.bidsfields['task']
-                del json_dict['Volume']
+                json_dict = vol.seqparam                        # copy original the json dict
+                json_dict['TaskName'] = vol.bidsfields['task']  # add TaskName
+                del json_dict['Volume']                         # remove the pointer to Volume instance
                 if not os.path.exists(out_path_json):
-                    with open(out_path_json, 'w') as fp:
+                    with open(out_path_json, 'w') as fp:        # write file
                         json.dump(json_dict, fp)
             else:
                 if not os.path.exists(out_path_json):
