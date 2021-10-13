@@ -125,11 +125,11 @@ def assemble_bids_key_value_pairs(bidsfields: dict) -> str:
     i = 0
     for key, value in bidsfields.items():
         i += 1
-        if i == 1:
+        if i == 1:  # sub- (initialization)
             name = key + '-' + str(value)
         elif key == 'suffix':
             name += '_' + str(value)
-        elif key == 'tag':
+        elif key == 'tag':  # this is the name of the dir, like anat, dwi, bold, ...
             pass
         else:
             name += '_' + key + '-' + str(value)
@@ -153,12 +153,14 @@ def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
 
             out_name = assemble_bids_key_value_pairs(vol.bidsfields)
 
+            # ----------------------------------------------------------------------------------------------------------
             # nii
             in_path_nii = vol.nii.path
             out_path_nii = os.path.join(dir_path, out_name + vol.ext)
             if not os.path.exists(out_path_nii):
                 os.symlink(in_path_nii, out_path_nii)
 
+            # ----------------------------------------------------------------------------------------------------------
             # json
             in_path_json = vol.json.path
             out_path_json = os.path.join(dir_path, out_name + '.json')
@@ -171,6 +173,7 @@ def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
                 if not os.path.exists(out_path_json):
                     with open(out_path_json, 'w') as fp:        # write file
                         json.dump(json_dict, fp)
+
             elif vol.bidsfields['tag'] == 'fmap' and vol.bidsfields['suffix'] == 'phasediff':
                 # for fmap, the phasediff .json must contain EchoTime1 and EchoTime2
                 # in Siemens gre_field_mapping, EchoTime2-EchoTime1 = 2.46ms. This seems constant
@@ -181,10 +184,12 @@ def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
                 if not os.path.exists(out_path_json):
                     with open(out_path_json, 'w') as fp:
                         json.dump(json_dict, fp)
+
             else:
                 if not os.path.exists(out_path_json):
                     os.symlink(in_path_json, out_path_json)
 
+            # ----------------------------------------------------------------------------------------------------------
             # bval
             if hasattr(vol, 'bval'):
                 in_path_bval = vol.bval.path
@@ -192,6 +197,7 @@ def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
                 if not os.path.exists(out_path_bval):
                     os.symlink(in_path_bval, out_path_bval)
 
+            # ----------------------------------------------------------------------------------------------------------
             # bvec
             if hasattr(vol, 'bvec'):
                 in_path_bvec = vol.bvec.path
