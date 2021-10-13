@@ -207,6 +207,27 @@ def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
 
 
 ########################################################################################################################
+def write_dataset_description(out_dir: str) -> None:
+
+    dataset_description = {
+        'Name': '',
+        'BIDSVersion': '1.6.0',
+        'HEDVersion': '',
+        'DatasetType': 'raw',
+        'License': 'PDDL',
+        'Authors': [''],
+        'Acknowledgements': '',
+        'HowToAcknowledge': '',
+        'Funding': [''],
+        'EthicsApprovals': [''],
+        'ReferencesAndLinks': [''],
+        'DatasetDOI': '',
+    }
+
+    with open(os.path.join(out_dir, 'dataset_description.json'), 'w') as fp:
+        json.dump(dataset_description, fp)
+
+########################################################################################################################
 def run(args: argparse.Namespace) -> None:
 
     # initialize logger (console & file)
@@ -249,6 +270,9 @@ def run(args: argparse.Namespace) -> None:
 
     # perform files operations
     apply_bids_architecture(args.out_dir,volume_list)
+
+    # write dataset_description.json
+    write_dataset_description(args.out_dir)
 
     # THE END
     sys.exit(0)
