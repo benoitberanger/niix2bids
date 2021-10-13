@@ -15,6 +15,7 @@ import niix2bids.decision_tree.siemens
 from niix2bids import metadata
 from niix2bids.classes import Volume
 
+current_time = datetime.now().strftime('%Y-%m-%d_%Hh%Sm%S')
 
 ########################################################################################################################
 def init_logger(out_dir: str, write_file: bool):
@@ -37,12 +38,11 @@ def init_logger(out_dir: str, write_file: bool):
     log.addHandler(consoleHandler)            # add handlers to logger
 
     # first log msg !
-    log.info(f"niix2buids version {metadata.get_version()}")
+    log.info(f"niix2bids=={metadata.get_version()}")
 
     # same thing but for a file handler
     if write_file:
-        timestamp = datetime.now().strftime('%Y-%m-%d_%Hh%Sm%S')
-        logfile = os.path.join(out_dir, "log_" + timestamp + ".txt")
+        logfile = os.path.join(out_dir, "log_" + current_time + ".txt")
 
         fileHandeler = logging.FileHandler(logfile)
         fileHandeler.setLevel(logging.DEBUG)
@@ -172,7 +172,8 @@ def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
                 json_dict['TaskName'] = vol.bidsfields['task']  # add TaskName
                 if not os.path.exists(out_path_json):
                     with open(out_path_json, 'w') as fp:        # write file
-                        json.dump(json_dict, fp)
+                        json.dump(json_dict, fp, indent=4)      # indent for prettiness
+                        fp.write('\n')                          # for prettiness too
 
             elif vol.bidsfields['tag'] == 'fmap' and vol.bidsfields['suffix'] == 'phasediff':
                 # for fmap, the phasediff .json must contain EchoTime1 and EchoTime2
@@ -183,7 +184,8 @@ def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
                 json_dict['EchoTime2'] = json_dict['EchoTime']
                 if not os.path.exists(out_path_json):
                     with open(out_path_json, 'w') as fp:
-                        json.dump(json_dict, fp)
+                        json.dump(json_dict, fp, indent=4)
+                        fp.write('\n')
 
             else:
                 if not os.path.exists(out_path_json):
@@ -225,7 +227,9 @@ def write_dataset_description(out_dir: str) -> None:
     }
 
     with open(os.path.join(out_dir, 'dataset_description.json'), 'w') as fp:
-        json.dump(dataset_description, fp)
+        json.dump(dataset_description, fp, indent=4)  # indent is for prettiness
+        fp.write('\n')                                # for prettiness too
+
 
 ########################################################################################################################
 def run(args: argparse.Namespace) -> None:
@@ -273,6 +277,15 @@ def run(args: argparse.Namespace) -> None:
 
     # write dataset_description.json
     write_dataset_description(args.out_dir)
+
+    # write other files
+    with open(os.path.join(args.out_dir,'README'), 'w') as fp:
+        fp.write(f"GeneratedBy : niix2bids=={metadata.get_version()} \n")
+    with open(os.path.join(args.out_dir,'CHANGES'), 'w') as fp:
+        fp.write(f"1.0.0 {current_time} \n")
+        fp.write(f"  - Initial release \n")
+    with open(os.path.join(args.out_dir,'LICENSE'), 'w') as fp:
+        fp.write('PDDL \n')
 
     # THE END
     sys.exit(0)
