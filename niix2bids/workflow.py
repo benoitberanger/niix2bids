@@ -6,6 +6,7 @@ from datetime import datetime   # to get current time
 import sys                      # to stop script execution on case of error
 import re                       # regular expressions
 import time                     # to time execution of code
+import json                     # to write json files
 
 # dependency modules
 
@@ -161,8 +162,16 @@ def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
             # json
             in_path_json = vol.json.path
             out_path_json = os.path.join(dir_path, out_name + '.json')
-            if not os.path.exists(out_path_json):
-                os.symlink(in_path_json, out_path_json)
+            if vol.bidsfields['tag'] == 'func':  # for func, the .json file needs to have 'TaskName' field
+                json_dict = vol.seqparam
+                json_dict['TaskName'] = vol.bidsfields['task']
+                del json_dict['Volume']
+                if not os.path.exists(out_path_json):
+                    with open(out_path_json, 'w') as fp:
+                        json.dump(json_dict, fp)
+            else:
+                if not os.path.exists(out_path_json):
+                    os.symlink(in_path_json, out_path_json)
 
             # bval
             if hasattr(vol, 'bval'):
