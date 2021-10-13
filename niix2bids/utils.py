@@ -6,6 +6,7 @@ import sys                      # to stop script execution on case of error
 import re                       # regular expressions
 import json                     # to write json files
 import time                     # to time execution of code
+from functools import wraps     # for decorator
 
 # dependency modules
 
@@ -45,6 +46,25 @@ def init_logger(out_dir: str, write_file: bool):
         fileHandeler.setLevel(logging.DEBUG)
         fileHandeler.setFormatter(formatter)
         log.addHandler(fileHandeler)
+
+
+########################################################################################################################
+def timeit(msg):
+
+    def log_time(func):
+
+        @wraps(func)  # to keep function info, such as __name__
+        def wrapper(*args, **kwargs):
+            start_time = time.time()
+            res = func(*args, **kwargs)
+            stop_time = time.time()
+            log = logging.getLogger(func.__name__)
+            log.debug(msg + f" ({stop_time-start_time:.3f}s)")
+            return res
+
+        return wrapper
+
+    return log_time
 
 
 ########################################################################################################################
@@ -110,17 +130,13 @@ def create_volume_list(file_list_nii: list[str]) -> list[Volume]:
 
 
 ########################################################################################################################
+@timeit('reading all JSON files')
 def read_all_json(volume_list: list[Volume]) -> None:
 
     log = logging.getLogger(__name__)
 
-    log.debug(f"start reading all JSON files...")
-    start_time = time.time()
     for volume in volume_list:
         volume.load_json()
-    stop_time = time.time()
-    log.debug(f"... done")
-    log.debug(f"reading all JSON took in {stop_time-start_time: .3f} seconds")
 
 
 ########################################################################################################################

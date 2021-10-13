@@ -2,14 +2,13 @@
 import logging                  # logging lib (terminal & file)
 import argparse                 # just for function signature
 import os                       # for path management
-from datetime import datetime   # to get current time
 import sys                      # to stop script execution on case of error
 
 # dependency modules
 
 # local modules
 import niix2bids.decision_tree.siemens
-from niix2bids import metadata, utils
+from niix2bids import utils
 
 
 ########################################################################################################################

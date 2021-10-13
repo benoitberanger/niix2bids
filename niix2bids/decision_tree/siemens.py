@@ -386,8 +386,3 @@ def run(volume_list: list[Volume]) -> None:
         for seq_regex, fcn_name in list_seq_regex:  # loop over sequence decision tree
             func = eval(fcn_name)   # fetch the name of the function to call dynamically
             func(group, seq_regex)  # execute the function
-
-    # # print for dev
-    # for vol in volume_list:
-    #     if bool(vol.bidsfields):  # print only the volumes correctly filled
-    #         print(vol.bidsfields)
