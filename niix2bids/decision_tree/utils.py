@@ -119,3 +119,15 @@ def clean_name(input_str: str) -> str:
     """
     output_str = re.sub(r'[^A-Za-z0-9]+', '', input_str)
     return output_str
+
+
+########################################################################################################################
+def get_phase_encoding_direction(input_str: str) -> str:
+    if input_str == 'j':
+        return 'PA'
+    if input_str == 'j-':
+        return 'AP'
+    if input_str == 'i':
+        return 'LR'
+    if input_str == 'i-':
+        return 'RL'

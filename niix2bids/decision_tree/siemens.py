@@ -129,39 +129,47 @@ def diff(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo_sbref = utils.slice_with_seriesdescription(seqinfo, '.*_SBRef$')
     for _, desc_grp in seqinfo_sbref.groupby('SeriesDescription'):
         run_idx = 0
-        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
-            run_idx += 1
-            for row_idx, seq in ser_grp.iterrows():
-                vol                   = seq['Volume']
-                vol.tag               = 'dwi'
-                vol.suffix            = 'sbref'
-                vol.sub               = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                vol.bidsfields['run'] = run_idx
-                vol.ready             = True
-                seqinfo = seqinfo.drop(row_idx)
+        for _, dir_grp in desc_grp.groupby('PhaseEncodingDirection'):
+            direction = dir_grp['PhaseEncodingDirection'].iloc(0)[0]  # just get first element, they are identical
+            direction = utils.get_phase_encoding_direction(direction)
+            for _, ser_grp in dir_grp.groupby('SeriesNumber'):
+                run_idx += 1
+                for row_idx, seq in ser_grp.iterrows():
+                    vol                   = seq['Volume']
+                    vol.tag               = 'dwi'
+                    vol.suffix            = 'sbref'
+                    vol.sub               = utils.clean_name(seq['PatientName'])
+                    vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+                    vol.bidsfields['dir'] = direction
+                    vol.bidsfields['run'] = run_idx
+                    vol.ready             = True
+                    seqinfo = seqinfo.drop(row_idx)
 
     # and now the normal volume
     for _, desc_grp in seqinfo.groupby('SeriesDescription'):
         run_idx = 0
-        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
-            run_idx += 1
-            for row_idx, seq in ser_grp.iterrows():
-                vol                   = seq['Volume']
-                vol.tag               = 'dwi'
-                vol.suffix            = 'dwi'
-                # check if .bval et .bvec exist
-                has_bval = vol.check_if_bval_exists()
-                has_bvec = vol.check_if_bvec_exists()
-                if not has_bval:
-                    vol.reason_not_ready += '[ no .bval file ] '
-                if not has_bvec:
-                    vol.reason_not_ready += '[ no .bvec file ] '
-                vol.sub               = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                vol.bidsfields['run'] = run_idx
-                if has_bval and has_bvec:
-                    vol.ready         = True
+        for _, dir_grp in desc_grp.groupby('PhaseEncodingDirection'):
+            direction = dir_grp['PhaseEncodingDirection'].iloc(0)[0]  # just get first element, they are identical
+            direction = utils.get_phase_encoding_direction(direction)
+            for _, ser_grp in dir_grp.groupby('SeriesNumber'):
+                run_idx += 1
+                for row_idx, seq in ser_grp.iterrows():
+                    vol                   = seq['Volume']
+                    vol.tag               = 'dwi'
+                    vol.suffix            = 'dwi'
+                    # check if .bval et .bvec exist
+                    has_bval = vol.check_if_bval_exists()
+                    has_bvec = vol.check_if_bvec_exists()
+                    if not has_bval:
+                        vol.reason_not_ready += '[ no .bval file ] '
+                    if not has_bvec:
+                        vol.reason_not_ready += '[ no .bvec file ] '
+                    vol.sub               = utils.clean_name(seq['PatientName'])
+                    vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+                    vol.bidsfields['dir'] = direction
+                    vol.bidsfields['run'] = run_idx
+                    if has_bval and has_bvec:
+                        vol.ready         = True
 
 
 ########################################################################################################################
@@ -176,19 +184,23 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo_sbref = utils.slice_with_seriesdescription(seqinfo, '.*_SBRef$')
     for _, desc_grp in seqinfo_sbref.groupby('SeriesDescription'):
         run_idx = 0
-        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
-            run_idx += 1
-            for row_idx, seq in ser_grp.iterrows():
-                vol                    = seq['Volume']
-                vol.tag                = 'func'
-                vol.suffix             = 'sbref'
-                vol.sub                = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['task'] = utils.clean_name(seq['ProtocolName'])
-                vol.bidsfields['run']  = run_idx
-                if not pandas.isna(seq['EchoNumber']):
-                    vol.bidsfields['echo'] = int(seq['EchoNumber'])
-                vol.ready             = True
-                seqinfo = seqinfo.drop(row_idx)
+        for _, dir_grp in desc_grp.groupby('PhaseEncodingDirection'):
+            direction = dir_grp['PhaseEncodingDirection'].iloc(0)[0]  # just get first element, they are identical
+            direction = utils.get_phase_encoding_direction(direction)
+            for _, ser_grp in dir_grp.groupby('SeriesNumber'):
+                run_idx += 1
+                for row_idx, seq in ser_grp.iterrows():
+                    vol                    = seq['Volume']
+                    vol.tag                = 'func'
+                    vol.suffix             = 'sbref'
+                    vol.sub                = utils.clean_name(seq['PatientName'])
+                    vol.bidsfields['task'] = utils.clean_name(seq['ProtocolName'])
+                    vol.bidsfields['dir'] = direction
+                    vol.bidsfields['run']  = run_idx
+                    if not pandas.isna(seq['EchoNumber']):
+                        vol.bidsfields['echo'] = int(seq['EchoNumber'])
+                    vol.ready             = True
+                    seqinfo = seqinfo.drop(row_idx)
 
     # only keep 4D data
     # ex : 1 volume can be acquired quickly to check subject position over time, so discard it, its not "BOLD"
@@ -204,35 +216,43 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo_mag = utils.slice_with_imagetype(seqinfo, 'M')
     for _, desc_grp in seqinfo_mag.groupby('SeriesDescription'):
         run_idx = 0
-        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
-            run_idx += 1
-            for row_idx, seq in ser_grp.iterrows():
-                vol                    = seq['Volume']
-                vol.tag                = 'func'
-                vol.suffix             = 'bold'
-                vol.sub                = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['task'] = utils.clean_name(seq['ProtocolName'])
-                vol.bidsfields['run']  = run_idx
-                if not pandas.isna(seq['EchoNumber']):
-                    vol.bidsfields['echo'] = int(seq['EchoNumber'])
-                vol.ready             = True
+        for _, dir_grp in desc_grp.groupby('PhaseEncodingDirection'):
+            direction = dir_grp['PhaseEncodingDirection'].iloc(0)[0]  # just get first element, they are identical
+            direction = utils.get_phase_encoding_direction(direction)
+            for _, ser_grp in dir_grp.groupby('SeriesNumber'):
+                run_idx += 1
+                for row_idx, seq in ser_grp.iterrows():
+                    vol                    = seq['Volume']
+                    vol.tag                = 'func'
+                    vol.suffix             = 'bold'
+                    vol.sub                = utils.clean_name(seq['PatientName'])
+                    vol.bidsfields['task'] = utils.clean_name(seq['ProtocolName'])
+                    vol.bidsfields['dir']  = direction
+                    vol.bidsfields['run']  = run_idx
+                    if not pandas.isna(seq['EchoNumber']):
+                        vol.bidsfields['echo'] = int(seq['EchoNumber'])
+                    vol.ready             = True
 
     # phase
     seqinfo_pha = utils.slice_with_imagetype(seqinfo, 'P')
     for _, desc_grp in seqinfo_pha.groupby('SeriesDescription'):
         run_idx = 0
-        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
-            run_idx += 1
-            for row_idx, seq in ser_grp.iterrows():
-                vol                    = seq['Volume']
-                vol.tag                = 'func'
-                vol.suffix             = 'phase'
-                vol.sub                = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['task'] = utils.clean_name(seq['ProtocolName'])
-                vol.bidsfields['run']  = run_idx
-                if not pandas.isna(seq['EchoNumber']):
-                    vol.bidsfields['echo'] = int(seq['EchoNumber'])
-                vol.ready             = True
+        for _, dir_grp in desc_grp.groupby('PhaseEncodingDirection'):
+            direction = dir_grp['PhaseEncodingDirection'].iloc(0)[0]  # just get first element, they are identical
+            direction = utils.get_phase_encoding_direction(direction)
+            for _, ser_grp in dir_grp.groupby('SeriesNumber'):
+                run_idx += 1
+                for row_idx, seq in ser_grp.iterrows():
+                    vol                    = seq['Volume']
+                    vol.tag                = 'func'
+                    vol.suffix             = 'phase'
+                    vol.sub                = utils.clean_name(seq['PatientName'])
+                    vol.bidsfields['task'] = utils.clean_name(seq['ProtocolName'])
+                    vol.bidsfields['dir']  = direction
+                    vol.bidsfields['run']  = run_idx
+                    if not pandas.isna(seq['EchoNumber']):
+                        vol.bidsfields['echo'] = int(seq['EchoNumber'])
+                    vol.ready             = True
 
 
 ########################################################################################################################
@@ -363,6 +383,31 @@ def tse(df: pandas.DataFrame, seq_regex: str) -> None:
 
 
 ########################################################################################################################
+def ep2d_se(df: pandas.DataFrame, seq_regex: str) -> None:
+    seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
+    if seqinfo.empty:                                           # just to run the code faster
+        return
+    seqinfo = utils.slice_with_mracquistiontype(seqinfo, '2D')  # keep 2D images
+
+    for _, desc_grp in seqinfo.groupby('SeriesDescription'):
+        run_idx = 0
+        for _, dir_grp in desc_grp.groupby('PhaseEncodingDirection'):
+            direction = dir_grp['PhaseEncodingDirection'].iloc(0)[0]  # just get first element, they are identical
+            direction = utils.get_phase_encoding_direction(direction)
+            for _, ser_grp in dir_grp.groupby('SeriesNumber'):
+                run_idx += 1
+                for row_idx, seq in ser_grp.iterrows():
+                    vol                   = seq['Volume']
+                    vol.tag               = 'fmap'
+                    vol.suffix            = 'epi'
+                    vol.sub               = utils.clean_name(seq['PatientName'])
+                    vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+                    vol.bidsfields['dir'] = direction
+                    vol.bidsfields['run'] = run_idx
+                    vol.ready             = True
+
+
+########################################################################################################################
 def discard(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)  # get list of corresponding sequence
     if seqinfo.empty:                                  # just to run the code faster
@@ -411,7 +456,7 @@ def run(volume_list: list[Volume]) -> None:
         ['^gre$'              , 'gre'    ],  # FLASH
         ['^icm_gre$'          , 'gre'    ],  # FLASH specific at ICM, with better phase reconstruction, will be used for QSM
         ['^tse$'              , 'tse'    ],  # tse, usually AX_2DT1 or AX_2DT2
-        # ['ep2d_se'          , 'ep2d_se'],  # SpinEcho EPI
+        ['.*ep2d_se.*'        , 'ep2d_se'],  # SpinEcho EPI
         # ['asl'              , 'asl'    ],  # 2D or 3D : ASL, pASL, pCASL
         # ['medic'            , 'medic'  ],  # dual echo T2*
         ['^haste$'            , 'discard']   #

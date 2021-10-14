@@ -238,7 +238,10 @@ def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
 
         else:
             if vol.reason_not_ready:
-                log.warning(f'{vol.reason_not_ready} : {vol.nii.path}')
+                if vol.reason_not_ready.find('discard') > -1:
+                    log.info(f'{vol.reason_not_ready} : {vol.nii.path}')
+                else:
+                    log.warning(f'{vol.reason_not_ready} : {vol.nii.path}')
             else:
                 log.warning(f'Nifti file not interpreted : {vol.nii.path}')
 
