@@ -1,5 +1,5 @@
+import metadata
 import setuptools  # for the setup, i.e. generate the script that enables CLI
-from niix2bids import metadata
 
 with open('README.md',"r") as f:
     long_description = f.readlines()

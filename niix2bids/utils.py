@@ -13,7 +13,7 @@ import inspect                  # to get the current module name
 # dependency modules
 
 # local modules
-from niix2bids import metadata
+import metadata
 from niix2bids.classes import Volume
 
 
