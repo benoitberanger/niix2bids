@@ -49,17 +49,25 @@ def init_logger(out_dir: str, write_file: bool):
 
 
 ########################################################################################################################
-def timeit(msg):
+def logit(message, level=logging.INFO, timeit=True):
 
     def log_time(func):
 
         @wraps(func)  # to keep function info, such as __name__
         def wrapper(*args, **kwargs):
-            start_time = time.time()
-            res = func(*args, **kwargs)
-            stop_time = time.time()
-            log = logging.getLogger(func.__name__)
-            log.debug(msg + f" ({stop_time-start_time:.3f}s)")
+            msg = message
+
+            if timeit:
+                start_time = time.time()
+                res = func(*args, **kwargs)
+                stop_time = time.time()
+                msg += f" ({stop_time-start_time:.3f}s)"
+            else:
+                res = func(*args, **kwargs)
+
+            log = logging.getLogger(__name__ + ':' + func.__name__)
+            log.log(level, msg)
+
             return res
 
         return wrapper
@@ -68,6 +76,7 @@ def timeit(msg):
 
 
 ########################################################################################################################
+@logit('Fetch all files recursively.', logging.INFO)
 def fetch_all_files(in_dir: str) -> list[str]:
 
     file_list = []
@@ -85,6 +94,7 @@ def fetch_all_files(in_dir: str) -> list[str]:
 
 
 ########################################################################################################################
+@logit('Keep only nifti files (.nii, .nii.gz).', logging.INFO)
 def isolate_nii_files(in_list: list[str]) -> list[str]:
     log = logging.getLogger(__name__)
 
@@ -100,6 +110,7 @@ def isolate_nii_files(in_list: list[str]) -> list[str]:
 
 
 ########################################################################################################################
+@logit('Check if .json exist for each nifti file.', logging.INFO)
 def check_if_json_exists(file_list_nii: list[str]) -> tuple[list[str], list[str]]:
     log = logging.getLogger(__name__)
 
@@ -121,6 +132,7 @@ def check_if_json_exists(file_list_nii: list[str]) -> tuple[list[str], list[str]
 
 
 ########################################################################################################################
+@logit('Creation of internal object that will store all info, 1 per nifti.', logging.DEBUG)
 def create_volume_list(file_list_nii: list[str]) -> list[Volume]:
 
     for file in file_list_nii:
@@ -130,7 +142,7 @@ def create_volume_list(file_list_nii: list[str]) -> list[Volume]:
 
 
 ########################################################################################################################
-@timeit('reading all JSON files')
+@logit('Read all .json files. This step might take time, it involves reading lots of files', logging.INFO)
 def read_all_json(volume_list: list[Volume]) -> None:
 
     log = logging.getLogger(__name__)
@@ -158,6 +170,7 @@ def assemble_bids_key_value_pairs(bidsfields: dict) -> str:
 
 
 ########################################################################################################################
+@logit('Apply BIDS architecture. This might take time, it involves lots of disk writing.', logging.INFO)
 def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
 
     for vol in volume_list:
@@ -229,6 +242,7 @@ def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
 
 
 ########################################################################################################################
+@logit('Writing dataset_description.json', logging.INFO)
 def write_bids_dataset_description(out_dir: str) -> None:
 
     dataset_description = {
@@ -252,6 +266,7 @@ def write_bids_dataset_description(out_dir: str) -> None:
 
 
 ########################################################################################################################
+@logit('Writing README, CHANGES, LICENSE files', logging.INFO)
 def write_bids_other_files(out_dir: str) -> None:
 
     # README

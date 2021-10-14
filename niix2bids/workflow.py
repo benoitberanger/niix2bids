@@ -3,6 +3,7 @@ import logging                  # logging lib (terminal & file)
 import argparse                 # just for function signature
 import os                       # for path management
 import sys                      # to stop script execution on case of error
+import time                     # to time execution of code
 
 # dependency modules
 
@@ -13,6 +14,8 @@ from niix2bids import utils
 
 ########################################################################################################################
 def run(args: argparse.Namespace) -> None:
+
+    star_time = time.time()
 
     # initialize logger (console & file)
     utils.init_logger(args.out_dir, args.logfile)
@@ -56,6 +59,10 @@ def run(args: argparse.Namespace) -> None:
 
     # write other files
     utils.write_bids_other_files(args.out_dir)
+
+    stop_time = time.time()
+
+    log.info(f'Total execution time is : {stop_time-star_time:.3f}s')
 
     # THE END
     sys.exit(0)
