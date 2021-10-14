@@ -167,6 +167,8 @@ def assemble_bids_name(vol: Volume) -> str:
 @logit('Apply BIDS architecture. This might take time, it involves lots of disk writing.', logging.INFO)
 def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
 
+    log = logging.getLogger(__name__)
+
     for vol in volume_list:
         if vol.ready:  # only process correctly parsed volumes
 
@@ -235,7 +237,10 @@ def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
                     os.symlink(in_path_bvec, out_path_bvec)
 
         else:
-            logging.warning(f'Nifti file not interpreted : {vol.json.path}')
+            if vol.reason_not_ready:
+                log.warning(f'{vol.reason_not_ready} : {vol.nii.path}')
+            else:
+                log.warning(f'Nifti file not interpreted : {vol.nii.path}')
 
 
 ########################################################################################################################

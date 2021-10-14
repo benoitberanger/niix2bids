@@ -113,8 +113,16 @@ def diff(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
     if seqinfo.empty:                                           # just to run the code faster
         return
-    seqinfo = utils.slice_with_imagetype_original(seqinfo)      # keep ORIGINAL images, discard ADC, FA, ColFA, ...
     seqinfo = utils.slice_with_mracquistiontype(seqinfo, '2D')  # keep 2D images
+
+    # keep ORIGINAL images, discard ADC, FA, ColFA, ...
+    seqinfo_original = utils.slice_with_imagetype_original(seqinfo)
+    seqinfo_discard = seqinfo.drop(seqinfo_original.index)
+    for row_idx, seq in seqinfo_discard.iterrows():
+        vol                   = seq['Volume']
+        vol.reason_not_ready  = f"dwi non-ORIGINAL {str(seq['ImageType'])}"
+        vol.ready             = False
+    seqinfo = seqinfo_original
 
     # in case of multiband sequence, SBRef images may be generated
     # therefore, we need to deal with them beforehand
@@ -143,12 +151,17 @@ def diff(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol.tag               = 'dwi'
                 vol.suffix            = 'dwi'
                 # check if .bval et .bvec exist
-                vol.check_if_bval_exists()
-                vol.check_if_bvec_exists()
+                has_bval = vol.check_if_bval_exists()
+                has_bvec = vol.check_if_bvec_exists()
+                if not has_bval:
+                    vol.reason_not_ready += '[ no .bval file ] '
+                if not has_bvec:
+                    vol.reason_not_ready += '[ no .bvec file ] '
                 vol.sub               = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                vol.ready             = True
+                if has_bval and has_bvec:
+                    vol.ready         = True
 
 
 ########################################################################################################################
@@ -179,11 +192,10 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
 
     # only keep 4D data
     # ex : 1 volume can be acquired quickly to check subject position over time, so discard it, its not "BOLD"
-
     for row_idx, seq in seqinfo.iterrows():
         nii = nibabel.load( seq['Volume'].nii.path )
         if nii.ndim < 4:  # check 4D
-            log.warning(f"non 4D volume, discard it : {seq['Volume'].nii.path}")
+            seq['Volume'].reason_not_ready = 'non 4D bold volume'
             seqinfo = seqinfo.drop(row_idx)
 
     # separate magnitude & phase images
@@ -351,6 +363,18 @@ def tse(df: pandas.DataFrame, seq_regex: str) -> None:
 
 
 ########################################################################################################################
+def discard(df: pandas.DataFrame, seq_regex: str) -> None:
+    seqinfo = utils.slice_with_seqname(df, seq_regex)  # get list of corresponding sequence
+    if seqinfo.empty:                                  # just to run the code faster
+        return
+
+    for row_idx, seq in seqinfo.iterrows():
+        vol                   = seq['Volume']
+        vol.reason_not_ready  = f'discarded sequence {seq_regex}'
+        vol.ready             = False
+
+
+########################################################################################################################
 def run(volume_list: list[Volume]) -> None:
 
     log.info(f'starting decision tree for "Siemens"... ')
@@ -390,6 +414,7 @@ def run(volume_list: list[Volume]) -> None:
         # ['ep2d_se'          , 'ep2d_se'],  # SpinEcho EPI
         # ['asl'              , 'asl'    ],  # 2D or 3D : ASL, pASL, pCASL
         # ['medic'            , 'medic'  ],  # dual echo T2*
+        ['^haste$'            , 'discard']   #
     ]
 
     # subject by subject sequence group

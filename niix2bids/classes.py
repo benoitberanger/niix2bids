@@ -2,9 +2,6 @@ import os  # for path management
 import json  # json file loading
 import logging  # logging lib (terminal & file)
 
-# get logger with current name
-log = logging.getLogger(__name__)
-
 
 ########################################################################################################################
 class File:
@@ -92,16 +89,16 @@ class Volume:
     def check_if_bval_exists(self) -> bool:
         bval_file = os.path.splitext(self.nii.path)[0] + ".bval"
         if not os.path.exists(bval_file):
-            log.warning(f"this file has no .bval associated : {self.nii.path}")
             return False
-        self.bval = Bval(bval_file)
-        return True
+        else:
+            self.bval = Bval(bval_file)
+            return True
 
     # ------------------------------------------------------------------------------------------------------------------
     def check_if_bvec_exists(self) -> bool:
         bvec_file = os.path.splitext(self.nii.path)[0] + ".bvec"
         if not os.path.exists(bvec_file):
-            log.warning(f"this file has no .bvec associated : {self.nii.path}")
             return False
-        self.bvec = Bvec(bvec_file)
-        return True
+        else:
+            self.bvec = Bvec(bvec_file)
+            return True
