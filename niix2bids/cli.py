@@ -6,7 +6,7 @@ import os        # for path management
 
 # local modules
 import niix2bids
-
+from niix2bids import metadata
 
 ########################################################################################################################
 def format_args(args: argparse.Namespace) -> argparse.Namespace:

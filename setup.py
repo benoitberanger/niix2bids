@@ -1,6 +1,6 @@
 import setuptools  # for the setup, i.e. generate the script that enables CLI
 
-with open('niix2bids/metadata.py','r') as fp:
+with open('niix2bids/metadata.py', 'r') as fp:
     line = fp.readline()                      # read first line, which is "__version__ = '0.0.1'"
     __version__ = line.split()[2].strip("'")  # extract version number
 
