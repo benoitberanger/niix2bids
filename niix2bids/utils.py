@@ -152,19 +152,13 @@ def read_all_json(volume_list: list[Volume]) -> None:
 
 
 ########################################################################################################################
-def assemble_bids_key_value_pairs(bidsfields: dict) -> str:
+def assemble_bids_name(vol: Volume) -> str:
 
-    i = 0
-    for key, value in bidsfields.items():
-        i += 1
-        if i == 1:  # sub- (initialization)
-            name = key + '-' + str(value)
-        elif key == 'suffix':
-            name += '_' + str(value)
-        elif key == 'tag':  # this is the name of the dir, like anat, dwi, bold, ...
-            pass
-        else:
-            name += '_' + key + '-' + str(value)
+    bidsfields = ''
+    for key, value in vol.bidsfields.items():
+        bidsfields += '_' + key + '-' + str(value)
+
+    name = 'sub-' + vol.sub + bidsfields + '_' + vol.suffix
 
     return name
 
@@ -174,17 +168,17 @@ def assemble_bids_key_value_pairs(bidsfields: dict) -> str:
 def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
 
     for vol in volume_list:
-        if bool(vol.bidsfields):  # only process correctly parsed volumes
+        if vol.ready:  # only process correctly parsed volumes
 
             dir_path = os.path.join(
                 out_dir,
-                "sub-" + vol.bidsfields['sub'],
-                vol.bidsfields["tag"])
+                "sub-" + vol.sub,
+                vol.tag)
 
             # recursive directory creation, and do not raise error if already exists
             os.makedirs(dir_path, exist_ok=True)
 
-            out_name = assemble_bids_key_value_pairs(vol.bidsfields)
+            out_name = assemble_bids_name(vol)
 
             # ----------------------------------------------------------------------------------------------------------
             # nii
@@ -198,7 +192,7 @@ def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
             in_path_json = vol.json.path
             out_path_json = os.path.join(dir_path, out_name + '.json')
 
-            if vol.bidsfields['tag'] == 'func':
+            if vol.tag == 'func':
                 # for func, the .json file needs to have 'TaskName' field
                 json_dict = vol.seqparam                        # copy original the json dict
                 del json_dict['Volume']                         # remove the pointer to Volume instance
@@ -208,7 +202,7 @@ def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
                         json.dump(json_dict, fp, indent=4)      # indent for prettiness
                         fp.write('\n')                          # for prettiness too
 
-            elif vol.bidsfields['tag'] == 'fmap' and vol.bidsfields['suffix'] == 'phasediff':
+            elif vol.tag == 'fmap' and vol.suffix == 'phasediff':
                 # for fmap, the phasediff .json must contain EchoTime1 and EchoTime2
                 # in Siemens gre_field_mapping, EchoTime2-EchoTime1 = 2.46ms. This seems constant
                 json_dict = vol.seqparam
@@ -239,6 +233,9 @@ def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
                 out_path_bvec = os.path.join(dir_path, out_name + '.bvec')
                 if not os.path.exists(out_path_bvec):
                     os.symlink(in_path_bvec, out_path_bvec)
+
+        else:
+            logging.warning(f'Nifti file not interpreted : {vol.json.path}')
 
 
 ########################################################################################################################

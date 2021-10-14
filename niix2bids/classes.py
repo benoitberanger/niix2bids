@@ -54,7 +54,7 @@ class Volume:
         if ext not in [".nii", ".gz"]:
             raise RuntimeError(f"not a .nii file : {niipath}")
         if ext == ".gz":
-            basename = os.path.splitext( os.path.basename(root) )[0]
+            basename = os.path.splitext(os.path.basename(root))[0]
             ext      = '.nii.gz'
             jsonfile = os.path.splitext(root)[0] + ".json"
         else:
@@ -63,12 +63,17 @@ class Volume:
             jsonfile = os.path.splitext(niipath)[0] + ".json"
 
         # instance filling
-        self.basename   = basename
-        self.ext        = ext
-        self.nii        = Nii(niipath)
-        self.json       = Json(jsonfile)
-        self.seqparam   = dict
-        self.bidsfields = {}
+        self.basename         = basename       # /path/to/volume
+        self.ext              = ext            # .nii OR .nii.gz
+        self.nii              = Nii(niipath)
+        self.json             = Json(jsonfile)
+        self.seqparam         = dict           # content of the .json file, from dcm2niix
+        self.ready            = False          # flag
+        self.reason_not_ready = ''             # if ready==False, this is the message that will be displayed
+        self.bidsfields       = {}             # all bids fields, such as acq-<>_run-<>
+        self.tag              = ''             # modality, such as anat, dwi, bold, fmap
+        self.sub              = ''             # subject name, such as sub-<>
+        self.suffix           = ''             # suffix, such as T1w, bold, sbref
 
         # store a list of all instances
         self.__class__.instances.append(self)

@@ -44,16 +44,16 @@ def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
             for _, ser_grp in desc_grp.groupby('SeriesNumber'):
                 run_idx += 1
                 for row_idx, seq in ser_grp.iterrows():
-                    vol = seq['Volume']
-                    vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                    vol.bidsfields['tag'] = 'anat'
+                    vol                   = seq['Volume']
+                    vol.tag               = 'anat'
+                    vol.suffix            = suffix_list[descr_regex_list.index(descr_regex)]
+                    vol.sub               = utils.clean_name(seq['PatientName'])
                     vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                     vol.bidsfields['run'] = run_idx
-                    suffix = suffix_list[descr_regex_list.index(descr_regex)]
-                    if suffix == 'MP2RAGE':
+                    if vol.suffix            == 'MP2RAGE':
                         # _inv-<index>[_part-<label>]_MP2RAGE.nii
                         vol.bidsfields['inv'] = descr_regex_list.index(descr_regex) + 1
-                    vol.bidsfields['suffix'] = suffix
+                    vol.ready             = True
                     seqinfo = seqinfo.drop(row_idx)
 
     # now that we have dealt with the mp2rage@siemens suffix, we can continue
@@ -62,12 +62,13 @@ def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
             run_idx += 1
             for row_idx, seq in ser_grp.iterrows():
-                vol = seq['Volume']
-                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['tag'] = 'anat'
+                vol                   = seq['Volume']
+                vol.tag               = 'anat'
+                vol.suffix            = 'T1w'
+                vol.sub               = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                vol.bidsfields['suffix'] = 'T1w'
+                vol.ready             = True
 
 
 ########################################################################################################################
@@ -85,24 +86,26 @@ def tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
             run_idx += 1
             for row_idx, seq in ser_grp.iterrows():
-                vol = seq['Volume']
-                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['tag'] = 'anat'
+                vol                   = seq['Volume']
+                vol.tag               = 'anat'
+                vol.suffix            = 'T2w'
+                vol.sub               = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                vol.bidsfields['suffix'] = 'T2w'
+                vol.ready             = True
 
     for _, desc_grp in seqinfo_FLAIR.groupby('SeriesDescription'):
         run_idx = 0
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
             run_idx += 1
             for row_idx, seq in ser_grp.iterrows():
-                vol = seq['Volume']
-                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['tag'] = 'anat'
+                vol                   = seq['Volume']
+                vol.tag               = 'anat'
+                vol.suffix            = 'FLAIR'
+                vol.sub               = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                vol.bidsfields['suffix'] = 'FLAIR'
+                vol.ready             = True
 
 
 ########################################################################################################################
@@ -121,12 +124,13 @@ def diff(df: pandas.DataFrame, seq_regex: str) -> None:
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
             run_idx += 1
             for row_idx, seq in ser_grp.iterrows():
-                vol = seq['Volume']
-                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['tag'] = 'dwi'
+                vol                   = seq['Volume']
+                vol.tag               = 'dwi'
+                vol.suffix            = 'sbref'
+                vol.sub               = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                vol.bidsfields['suffix'] = 'sbref'
+                vol.ready             = True
                 seqinfo = seqinfo.drop(row_idx)
 
     # and now the normal volume
@@ -135,15 +139,16 @@ def diff(df: pandas.DataFrame, seq_regex: str) -> None:
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
             run_idx += 1
             for row_idx, seq in ser_grp.iterrows():
-                vol = seq['Volume']
+                vol                   = seq['Volume']
+                vol.tag               = 'dwi'
+                vol.suffix            = 'dwi'
                 # check if .bval et .bvec exist
                 vol.check_if_bval_exists()
                 vol.check_if_bvec_exists()
-                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['tag'] = 'dwi'
+                vol.sub               = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                vol.bidsfields['suffix'] = 'dwi'
+                vol.ready             = True
 
 
 ########################################################################################################################
@@ -161,14 +166,15 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
             run_idx += 1
             for row_idx, seq in ser_grp.iterrows():
-                vol = seq['Volume']
-                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['tag'] = 'func'
+                vol                    = seq['Volume']
+                vol.tag                = 'func'
+                vol.suffix             = 'sbref'
+                vol.sub                = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['task'] = utils.clean_name(seq['ProtocolName'])
-                vol.bidsfields['run'] = run_idx
+                vol.bidsfields['run']  = run_idx
                 if not pandas.isna(seq['EchoNumber']):
                     vol.bidsfields['echo'] = int(seq['EchoNumber'])
-                vol.bidsfields['suffix'] = 'sbref'
+                vol.ready             = True
                 seqinfo = seqinfo.drop(row_idx)
 
     # only keep 4D data
@@ -189,14 +195,15 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
             run_idx += 1
             for row_idx, seq in ser_grp.iterrows():
-                vol = seq['Volume']
-                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['tag'] = 'func'
+                vol                    = seq['Volume']
+                vol.tag                = 'func'
+                vol.suffix             = 'bold'
+                vol.sub                = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['task'] = utils.clean_name(seq['ProtocolName'])
-                vol.bidsfields['run'] = run_idx
+                vol.bidsfields['run']  = run_idx
                 if not pandas.isna(seq['EchoNumber']):
                     vol.bidsfields['echo'] = int(seq['EchoNumber'])
-                vol.bidsfields['suffix'] = 'bold'
+                vol.ready             = True
 
     # phase
     seqinfo_pha = utils.slice_with_imagetype(seqinfo, 'P')
@@ -205,14 +212,15 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
             run_idx += 1
             for row_idx, seq in ser_grp.iterrows():
-                vol = seq['Volume']
-                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['tag'] = 'func'
+                vol                    = seq['Volume']
+                vol.tag                = 'func'
+                vol.suffix             = 'phase'
+                vol.sub                = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['task'] = utils.clean_name(seq['ProtocolName'])
-                vol.bidsfields['run'] = run_idx
+                vol.bidsfields['run']  = run_idx
                 if not pandas.isna(seq['EchoNumber']):
                     vol.bidsfields['echo'] = int(seq['EchoNumber'])
-                vol.bidsfields['suffix'] = 'phase'
+                vol.ready             = True
 
 
 ########################################################################################################################
@@ -231,13 +239,13 @@ def fmap(df: pandas.DataFrame, seq_regex: str) -> None:
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
             run_idx += 1
             for row_idx, seq in ser_grp.iterrows():
-                vol = seq['Volume']
-                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['tag'] = 'fmap'
+                vol                   = seq['Volume']
+                vol.tag               = 'fmap'
+                vol.suffix            = f"magnitude{int(seq['EchoNumber'])}"  # suffix has to be _magnitude1 _magnitude2
+                vol.sub               = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                # suffix has to be _magnitude1 _magnitude2
-                vol.bidsfields['suffix'] = f"magnitude{int(seq['EchoNumber'])}"
+                vol.ready             = True
 
     # phase
     seqinfo_pha = utils.slice_with_imagetype(seqinfo, 'P')
@@ -246,12 +254,13 @@ def fmap(df: pandas.DataFrame, seq_regex: str) -> None:
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
             run_idx += 1
             for row_idx, seq in ser_grp.iterrows():
-                vol = seq['Volume']
-                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['tag'] = 'fmap'
+                vol                   = seq['Volume']
+                vol.tag               = 'fmap'
+                vol.suffix            = 'phasediff'
+                vol.sub               = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                vol.bidsfields['suffix'] = 'phasediff'
+                vol.ready             = True
 
 
 ########################################################################################################################
@@ -269,18 +278,19 @@ def gre(df: pandas.DataFrame, seq_regex: str) -> None:
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
             run_idx += 1
             for row_idx, seq in ser_grp.iterrows():
-                vol = seq['Volume']
-                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['tag'] = 'anat'
+                vol                   = seq['Volume']
+                vol.tag               = 'anat'
+                vol.sub               = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
                 if not pandas.isna(seq['EchoNumber']):
                     vol.bidsfields['echo'] = int(seq['EchoNumber'])
                     vol.bidsfields['part'] = 'mag'
-                    vol.bidsfields['suffix'] = 'MEGRE'
+                    vol.suffix             = 'MEGRE'
                 else:
                     vol.bidsfields['part'] = 'mag'
-                    vol.bidsfields['suffix'] = 'T2starw'
+                    vol.suffix             = 'T2starw'
+                vol.ready             = True
 
     # magnitude
     seqinfo_pha = utils.slice_with_imagetype(seqinfo, 'P')
@@ -289,18 +299,19 @@ def gre(df: pandas.DataFrame, seq_regex: str) -> None:
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
             run_idx += 1
             for row_idx, seq in ser_grp.iterrows():
-                vol = seq['Volume']
-                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['tag'] = 'anat'
+                vol                   = seq['Volume']
+                vol.tag               = 'anat'
+                vol.sub               = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
                 if not pandas.isna(seq['EchoNumber']):
                     vol.bidsfields['echo'] = int(seq['EchoNumber'])
                     vol.bidsfields['part'] = 'phase'
-                    vol.bidsfields['suffix'] = 'MEGRE'
+                    vol.suffix             = 'MEGRE'
                 else:
                     vol.bidsfields['part'] = 'phase'
-                    vol.bidsfields['suffix'] = 'T2starw'
+                    vol.suffix             = 'T2starw'
+                vol.ready             = True
 
 
 ########################################################################################################################
@@ -317,24 +328,26 @@ def tse(df: pandas.DataFrame, seq_regex: str) -> None:
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
             run_idx += 1
             for row_idx, seq in ser_grp.iterrows():
-                vol = seq['Volume']
-                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['tag'] = 'anat'
+                vol                   = seq['Volume']
+                vol.tag               = 'anat'
+                vol.suffix            = 'T2w'
+                vol.sub               = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                vol.bidsfields['suffix'] = 'T2w'
+                vol.ready             = True
 
     for _, desc_grp in seqinfo_FLAIR.groupby('SeriesDescription'):
         run_idx = 0
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
             run_idx += 1
             for row_idx, seq in ser_grp.iterrows():
-                vol = seq['Volume']
-                vol.bidsfields['sub'] = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['tag'] = 'anat'
+                vol                   = seq['Volume']
+                vol.tag               = 'anat'
+                vol.suffix            = 'FLAIR'
+                vol.sub               = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                vol.bidsfields['suffix'] = 'FLAIR'
+                vol.ready             = True
 
 
 ########################################################################################################################
