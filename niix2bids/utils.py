@@ -277,7 +277,7 @@ def write_bids_dataset_description(out_dir: str) -> None:
 
 
 ########################################################################################################################
-@logit('Writing README, CHANGES, LICENSE files', logging.INFO)
+@logit('Writing README, CHANGES, LICENSE, .bidsignore files', logging.INFO)
 def write_bids_other_files(out_dir: str) -> None:
 
     # README
@@ -293,3 +293,7 @@ def write_bids_other_files(out_dir: str) -> None:
     # LICENSE
     with open(os.path.join(out_dir, 'LICENSE'), 'w') as fp:
         fp.write('PDDL \n')
+
+    # .bidsignore
+    with open(os.path.join(out_dir, '.bidsignore'), 'w') as fp:
+        fp.write('log_* \n')
