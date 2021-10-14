@@ -7,6 +7,8 @@ import re                       # regular expressions
 import json                     # to write json files
 import time                     # to time execution of code
 from functools import wraps     # for decorator
+import traceback                # to get the current function name
+import inspect                  # to get the current module name
 
 # dependency modules
 
@@ -49,6 +51,16 @@ def init_logger(out_dir: str, write_file: bool):
 
 
 ########################################################################################################################
+def get_loger():
+    fcn_name = traceback.extract_stack(None, 2)[0][2]
+    upperstack = inspect.stack()[1]
+    mdl_name = inspect.getmodule(upperstack[0]).__name__
+    name = mdl_name + ':' + fcn_name
+    log = logging.getLogger(name)
+    return log
+
+
+########################################################################################################################
 def logit(message, level=logging.INFO):
 
     def log_time(func):
@@ -84,7 +96,7 @@ def fetch_all_files(in_dir: str) -> list[str]:
             file_list.append(os.path.join(root, file))
 
     if len(file_list) == 0:
-        log = logging.getLogger(__name__)
+        log = get_loger()
         log.error(f"no file found in {in_dir}")
         sys.exit(1)
 
@@ -95,7 +107,7 @@ def fetch_all_files(in_dir: str) -> list[str]:
 ########################################################################################################################
 @logit('Keep only nifti files (.nii, .nii.gz).', logging.INFO)
 def isolate_nii_files(in_list: list[str]) -> list[str]:
-    log = logging.getLogger(__name__)
+    log = get_loger()
 
     r = re.compile(r"(.*nii$)|(.*nii.gz$)$")
     file_list_nii = list(filter(r.match, in_list))
@@ -111,7 +123,7 @@ def isolate_nii_files(in_list: list[str]) -> list[str]:
 ########################################################################################################################
 @logit('Check if .json exist for each nifti file.', logging.INFO)
 def check_if_json_exists(file_list_nii: list[str]) -> tuple[list[str], list[str]]:
-    log = logging.getLogger(__name__)
+    log = get_loger()
 
     file_list_json = []
     for file in file_list_nii:
@@ -144,7 +156,7 @@ def create_volume_list(file_list_nii: list[str]) -> list[Volume]:
 @logit('Read all .json files. This step might take time, it involves reading lots of files', logging.INFO)
 def read_all_json(volume_list: list[Volume]) -> None:
 
-    log = logging.getLogger(__name__)
+    log = get_loger()
 
     for volume in volume_list:
         volume.load_json()
@@ -166,7 +178,7 @@ def assemble_bids_name(vol: Volume) -> str:
 @logit('Apply BIDS architecture. This might take time, it involves lots of disk writing.', logging.INFO)
 def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
 
-    log = logging.getLogger(__name__)
+    log = get_loger()
 
     for vol in volume_list:
         if vol.ready:  # only process correctly parsed volumes

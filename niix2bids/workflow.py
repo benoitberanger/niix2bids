@@ -10,6 +10,7 @@ import time                     # to time execution of code
 # local modules
 import niix2bids.decision_tree.siemens
 from niix2bids import utils
+from niix2bids.utils import get_loger
 
 
 ########################################################################################################################
@@ -19,7 +20,7 @@ def run(args: argparse.Namespace) -> None:
 
     # initialize logger (console & file)
     utils.init_logger(args.out_dir, args.logfile)
-    log = logging.getLogger(__name__)
+    log = get_loger()
 
     # logs
     log.info(f"nifti_dir : {args.nifti_dir}")

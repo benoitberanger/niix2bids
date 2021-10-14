@@ -8,10 +8,7 @@ import pandas   # for DataFrame
 
 # local modules
 from niix2bids.classes import Volume
-
-
-# get logger with current name
-log = logging.getLogger(__name__)
+from niix2bids.utils import get_loger
 
 
 ########################################################################################################################
@@ -26,6 +23,8 @@ def assemble_list_param(volume_list: list[Volume]) -> list[dict]:
 
 ########################################################################################################################
 def assert_is_dcm2niix(df: pandas.DataFrame) -> None:
+
+    log = get_loger()
 
     is_key_ConversionSoftware = 'ConversionSoftware' in df.columns
     if not is_key_ConversionSoftware:
@@ -44,6 +43,9 @@ def assert_is_dcm2niix(df: pandas.DataFrame) -> None:
 
 ########################################################################################################################
 def assert_has_patientname(df: pandas.DataFrame) -> None:
+
+    log = get_loger()
+
     is_key_PatientName = 'PatientName' in df.columns
 
     if not is_key_PatientName:
@@ -59,6 +61,8 @@ def assert_has_patientname(df: pandas.DataFrame) -> None:
 
 ########################################################################################################################
 def assert_key_val(df: pandas.DataFrame, key: str, value: str) -> None:
+
+    log = get_loger()
 
     if key not in df.columns:
         log.error(f'"{key}" entry is not present in all .json files.')
