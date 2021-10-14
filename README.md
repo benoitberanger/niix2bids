@@ -29,6 +29,14 @@ optional arguments:
 niix2bids version 0.0.1
 ```
 
+## Limitations
+
+- Only works with:
+  - Siemens magnets
+  - MRI data
+  - dicom converted using [dcm2niix](https://github.com/rordenlab/dcm2niix)
+- `PatientName` must be in the JSON file. Use [dcm2niix](https://github.com/rordenlab/dcm2niix) with option `-ba n` to **disable** anonmyzation
+
 
 ## Installation
 
