@@ -37,9 +37,6 @@ def init_logger(out_dir: str, write_file: bool):
     consoleHandler.setFormatter(formatter)    # add formatter handlers
     log.addHandler(consoleHandler)            # add handlers to logger
 
-    # first log msg !
-    log.info(f"niix2bids=={metadata.get_niix2bids_version()}")
-
     # same thing but for a file handler
     if write_file:
         logfile = os.path.join(out_dir, "log_" + datetime.now().strftime('%Y-%m-%d_%Hh%Sm%S') + ".txt")
@@ -156,8 +153,6 @@ def create_volume_list(file_list_nii: list[str]) -> list[Volume]:
 @logit('Read all .json files. This step might take time, it involves reading lots of files', logging.INFO)
 def read_all_json(volume_list: list[Volume]) -> None:
 
-    log = get_loger()
-
     for volume in volume_list:
         volume.load_json()
 
@@ -176,7 +171,7 @@ def assemble_bids_name(vol: Volume) -> str:
 
 ########################################################################################################################
 @logit('Apply BIDS architecture. This might take time, it involves lots of disk writing.', logging.INFO)
-def apply_bids_architecture(out_dir: str,volume_list: list[Volume]) -> None:
+def apply_bids_architecture(out_dir: str, volume_list: list[Volume]) -> None:
 
     log = get_loger()
 
@@ -286,15 +281,15 @@ def write_bids_dataset_description(out_dir: str) -> None:
 def write_bids_other_files(out_dir: str) -> None:
 
     # README
-    with open(os.path.join(out_dir,'README'), 'w') as fp:
+    with open(os.path.join(out_dir, 'README'), 'w') as fp:
         fp.write(f"GeneratedBy : niix2bids=={metadata.get_niix2bids_version()} \n")
         fp.write(f"BIDSVersion : {metadata.get_bids_version()} \n")
 
     # CHANGES
-    with open(os.path.join(out_dir,'CHANGES'), 'w') as fp:
+    with open(os.path.join(out_dir, 'CHANGES'), 'w') as fp:
         fp.write(f"1.0.0 {datetime.now().strftime('%Y-%m-%d')} \n")
         fp.write(f"  - Initial release \n")
 
     # LICENSE
-    with open(os.path.join(out_dir,'LICENSE'), 'w') as fp:
+    with open(os.path.join(out_dir, 'LICENSE'), 'w') as fp:
         fp.write('PDDL \n')
