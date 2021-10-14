@@ -1,12 +1,15 @@
-import metadata
 import setuptools  # for the setup, i.e. generate the script that enables CLI
 
-with open('README.md',"r") as f:
+with open('niix2bids/metadata.py','r') as fp:
+    line = fp.readline()                      # read first line, which is "__version__ = '0.0.1'"
+    __version__ = line.split()[2].strip("'")  # extract version number
+
+with open('README.md', 'r') as f:
     long_description = f.readlines()
 
 setuptools.setup(
     name="niix2bids",
-    version=metadata.get_niix2bids_version(),
+    version=__version__,
     author='Benoit Beranger',
     author_email='benoit.beranger@icm-institute.org',
     url='https://github.com/benoitberanger/niix2bids.git',

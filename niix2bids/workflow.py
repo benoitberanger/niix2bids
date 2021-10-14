@@ -8,8 +8,7 @@ import time                     # to time execution of code
 
 # local modules
 import niix2bids.decision_tree.siemens
-from niix2bids import utils
-import metadata
+from niix2bids import utils, metadata
 from niix2bids.utils import get_loger
 
 
