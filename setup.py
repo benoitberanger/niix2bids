@@ -18,7 +18,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     license='GPL3',
     packages=setuptools.find_packages(),
-    python_requires='=3.9',
+    python_requires='>=3.9',
     install_requires=[
         "pandas",
         "nibabel",
