@@ -1,18 +1,20 @@
 # standard modules
-import logging                  # logging lib (terminal & file)
-import os                       # for path management
-from datetime import datetime   # to get current time
-import sys                      # to stop script execution on case of error
-import re                       # regular expressions
-import json                     # to write json files
-import time                     # to time execution of code
-from functools import wraps     # for decorator
-import traceback                # to get the current function name
-import inspect                  # to get the current module name
+import logging                      # logging lib (terminal & file)
+import os                           # for path management
+from datetime import datetime       # to get current time
+import sys                          # to stop script execution on case of error
+import re                           # regular expressions
+import json                         # to write json files
+import time                         # to time execution of code
+from functools import wraps         # for decorator
+import traceback                    # to get the current function name
+import inspect                      # to get the current module name
+from typing import List,Dict,Tuple  # for function signature
 
 # dependency modules
 
 # local modules
+
 from niix2bids import metadata
 from niix2bids.classes import Volume
 
@@ -89,7 +91,7 @@ def logit(message, level=logging.INFO):
 
 ########################################################################################################################
 @logit('Fetch all files recursively. This might take time, it involves exploring the whole disk tree.', logging.INFO)
-def fetch_all_files(in_dir: str) -> list[str]:
+def fetch_all_files(in_dir: str) -> List[str]:
 
     file_list = []
     for root, dirs, files in os.walk(in_dir):
@@ -107,7 +109,7 @@ def fetch_all_files(in_dir: str) -> list[str]:
 
 ########################################################################################################################
 @logit('Keep only nifti files (.nii, .nii.gz).', logging.INFO)
-def isolate_nii_files(in_list: list[str]) -> list[str]:
+def isolate_nii_files(in_list: List[str]) -> List[str]:
     log = get_loger()
 
     r = re.compile(r"(.*nii$)|(.*nii.gz$)$")
@@ -123,7 +125,7 @@ def isolate_nii_files(in_list: list[str]) -> list[str]:
 
 ########################################################################################################################
 @logit('Check if .json exist for each nifti file.', logging.INFO)
-def check_if_json_exists(file_list_nii: list[str]) -> tuple[list[str], list[str]]:
+def check_if_json_exists(file_list_nii: List[str]) -> Tuple[List[str], List[str]]:
     log = get_loger()
 
     file_list_json = []
@@ -145,7 +147,7 @@ def check_if_json_exists(file_list_nii: list[str]) -> tuple[list[str], list[str]
 
 ########################################################################################################################
 @logit('Creation of internal object that will store all info, 1 per nifti.', logging.DEBUG)
-def create_volume_list(file_list_nii: list[str]) -> list[Volume]:
+def create_volume_list(file_list_nii: List[str]) -> List[Volume]:
 
     for file in file_list_nii:
         Volume(file)
@@ -155,7 +157,7 @@ def create_volume_list(file_list_nii: list[str]) -> list[Volume]:
 
 ########################################################################################################################
 @logit('Read all .json files. This step might take time, it involves reading lots of files', logging.INFO)
-def read_all_json(volume_list: list[Volume]) -> None:
+def read_all_json(volume_list: List[Volume]) -> None:
 
     for volume in volume_list:
         volume.load_json()
@@ -175,7 +177,7 @@ def assemble_bids_name(vol: Volume) -> str:
 
 ########################################################################################################################
 @logit('Apply BIDS architecture. This might take time, it involves lots of disk writing.', logging.INFO)
-def apply_bids_architecture(out_dir: str, volume_list: list[Volume]) -> None:
+def apply_bids_architecture(out_dir: str, volume_list: List[Volume]) -> None:
 
     log = get_loger()
 

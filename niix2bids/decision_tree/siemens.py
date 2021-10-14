@@ -1,5 +1,6 @@
 # standard modules
-import logging  # logging lib (terminal & file)
+import logging           # logging lib (terminal & file)
+from typing import List  # for function signature
 
 # dependency modules
 import pandas   # for DataFrame
@@ -419,7 +420,7 @@ def discard(df: pandas.DataFrame, seq_regex: str) -> None:
 
 
 ########################################################################################################################
-def run(volume_list: list[Volume]) -> None:
+def run(volume_list: List[Volume]) -> None:
 
     log = get_loger()
 
@@ -427,7 +428,7 @@ def run(volume_list: list[Volume]) -> None:
 
     list_param = utils.assemble_list_param(volume_list)
 
-    # conversion of list[dict] to pandas.DataFrame
+    # conversion of List[dict] to pandas.DataFrame
     # to pandas.DataFrame object is like table in matlab, with much more embedded methods
     df = pandas.DataFrame(list_param)
 

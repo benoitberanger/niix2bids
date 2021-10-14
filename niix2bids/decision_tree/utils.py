@@ -1,7 +1,8 @@
 # standard modules
-import logging  # logging lib (terminal & file)
-import sys      # to stop script execution on case of error
-import re       # regular expressions
+import logging           # logging lib (terminal & file)
+import sys               # to stop script execution on case of error
+import re                # regular expressions
+from typing import List  # for function signature
 
 # dependency modules
 import pandas   # for DataFrame
@@ -12,7 +13,7 @@ from niix2bids.utils import get_loger
 
 
 ########################################################################################################################
-def assemble_list_param(volume_list: list[Volume]) -> list[dict]:
+def assemble_list_param(volume_list: List[Volume]) -> List[dict]:
 
     list_param = []
     for volume in volume_list:
