@@ -49,11 +49,15 @@ def init_logger(out_dir: str, write_file: bool):
 
 ########################################################################################################################
 def get_loger():
+
     fcn_name = traceback.extract_stack(None, 2)[0][2]
+
     upperstack = inspect.stack()[1]
     mdl_name = inspect.getmodule(upperstack[0]).__name__
+
     name = mdl_name + ':' + fcn_name
     log = logging.getLogger(name)
+
     return log
 
 
@@ -84,7 +88,7 @@ def logit(message, level=logging.INFO):
 
 
 ########################################################################################################################
-@logit('Fetch all files recursively.', logging.INFO)
+@logit('Fetch all files recursively. This might take time, it involves exploring the whole disk tree.', logging.INFO)
 def fetch_all_files(in_dir: str) -> list[str]:
 
     file_list = []

@@ -17,7 +17,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=[
         "pandas",
-        "nibabel"
+        "nibabel",
     ],
     entry_points={
         'console_scripts': [
