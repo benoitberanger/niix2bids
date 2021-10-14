@@ -49,23 +49,22 @@ def init_logger(out_dir: str, write_file: bool):
 
 
 ########################################################################################################################
-def logit(message, level=logging.INFO, timeit=True):
+def logit(message, level=logging.INFO):
 
     def log_time(func):
 
         @wraps(func)  # to keep function info, such as __name__
         def wrapper(*args, **kwargs):
-            msg = message
-
-            if timeit:
-                start_time = time.time()
-                res = func(*args, **kwargs)
-                stop_time = time.time()
-                msg += f" ({stop_time-start_time:.3f}s)"
-            else:
-                res = func(*args, **kwargs)
-
             log = logging.getLogger(__name__ + ':' + func.__name__)
+
+            msg = message + ' # start'
+            log.log(level, msg)
+
+            start_time = time.time()
+            res = func(*args, **kwargs)
+            stop_time = time.time()
+
+            msg = message + f" # done in {stop_time-start_time:.3f}s"
             log.log(level, msg)
 
             return res
