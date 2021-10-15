@@ -52,12 +52,12 @@ def init_logger(out_dir: str, write_file: bool):
 ########################################################################################################################
 def get_loger():
 
-    fcn_name = traceback.extract_stack(None, 2)[0][2]
+    fcn_name = traceback.extract_stack(None, 2)[0][2]  # get function name of the caller
 
     upperstack = inspect.stack()[1]
-    mdl_name = inspect.getmodule(upperstack[0]).__name__
+    mdl_name = inspect.getmodule(upperstack[0]).__name__  # get module name of the caller
 
-    name = mdl_name + ':' + fcn_name
+    name = mdl_name + ':' + fcn_name  # ex : niix2bids.utils:apply_bids_architecture
     log = logging.getLogger(name)
 
     return log

@@ -65,7 +65,6 @@ class Volume:
         self.nii              = Nii(niipath)
         self.json             = Json(jsonfile)
         self.seqparam         = dict           # content of the .json file, from dcm2niix
-        self.ready            = False          # flag
         self.reason_not_ready = ''             # if ready==False, this is the message that will be displayed
         self.bidsfields       = {}             # all bids fields, such as acq-<>_run-<>
         self.tag              = ''             # modality, such as anat, dwi, bold, fmap
