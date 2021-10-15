@@ -53,7 +53,6 @@ def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
                     if vol.suffix            == 'MP2RAGE':
                         # _inv-<index>[_part-<label>]_MP2RAGE.nii
                         vol.bidsfields['inv'] = descr_regex_list.index(descr_regex) + 1
-                    vol.ready             = True
                     seqinfo = seqinfo.drop(row_idx)
 
     # now that we have dealt with the mp2rage@siemens suffix, we can continue
@@ -68,7 +67,6 @@ def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol.sub               = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                vol.ready             = True
 
 
 ########################################################################################################################
@@ -92,7 +90,6 @@ def tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol.sub               = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                vol.ready             = True
 
     for _, desc_grp in seqinfo_FLAIR.groupby('SeriesDescription'):
         run_idx = 0
@@ -105,7 +102,6 @@ def tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol.sub               = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                vol.ready             = True
 
 
 ########################################################################################################################
@@ -121,7 +117,6 @@ def diff(df: pandas.DataFrame, seq_regex: str) -> None:
     for row_idx, seq in seqinfo_discard.iterrows():
         vol                   = seq['Volume']
         vol.reason_not_ready  = f"dwi non-ORIGINAL {str(seq['ImageType'])}"
-        vol.ready             = False
     seqinfo = seqinfo_original
 
     # in case of multiband sequence, SBRef images may be generated
@@ -142,7 +137,6 @@ def diff(df: pandas.DataFrame, seq_regex: str) -> None:
                     vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                     vol.bidsfields['dir'] = direction
                     vol.bidsfields['run'] = run_idx
-                    vol.ready             = True
                     seqinfo = seqinfo.drop(row_idx)
 
     # and now the normal volume
@@ -169,7 +163,7 @@ def diff(df: pandas.DataFrame, seq_regex: str) -> None:
                     vol.bidsfields['dir'] = direction
                     vol.bidsfields['run'] = run_idx
                     if has_bval and has_bvec:
-                        vol.ready         = True
+                        vol.tag           = ''
 
 
 ########################################################################################################################
@@ -199,7 +193,6 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
                     vol.bidsfields['run']  = run_idx
                     if not pandas.isna(seq['EchoNumber']):
                         vol.bidsfields['echo'] = int(seq['EchoNumber'])
-                    vol.ready             = True
                     seqinfo = seqinfo.drop(row_idx)
 
     # only keep 4D data
@@ -231,7 +224,6 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
                     vol.bidsfields['run']  = run_idx
                     if not pandas.isna(seq['EchoNumber']):
                         vol.bidsfields['echo'] = int(seq['EchoNumber'])
-                    vol.ready             = True
 
     # phase
     seqinfo_pha = utils.slice_with_imagetype(seqinfo, 'P')
@@ -252,7 +244,6 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
                     vol.bidsfields['run']  = run_idx
                     if not pandas.isna(seq['EchoNumber']):
                         vol.bidsfields['echo'] = int(seq['EchoNumber'])
-                    vol.ready             = True
 
 
 ########################################################################################################################
@@ -277,7 +268,6 @@ def fmap(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol.sub               = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                vol.ready             = True
 
     # phase
     seqinfo_pha = utils.slice_with_imagetype(seqinfo, 'P')
@@ -292,7 +282,6 @@ def fmap(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol.sub               = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                vol.ready             = True
 
 
 ########################################################################################################################
@@ -322,7 +311,6 @@ def gre(df: pandas.DataFrame, seq_regex: str) -> None:
                 else:
                     vol.bidsfields['part'] = 'mag'
                     vol.suffix             = 'T2starw'
-                vol.ready             = True
 
     # magnitude
     seqinfo_pha = utils.slice_with_imagetype(seqinfo, 'P')
@@ -343,7 +331,6 @@ def gre(df: pandas.DataFrame, seq_regex: str) -> None:
                 else:
                     vol.bidsfields['part'] = 'phase'
                     vol.suffix             = 'T2starw'
-                vol.ready             = True
 
 
 ########################################################################################################################
@@ -366,7 +353,6 @@ def tse(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol.sub               = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                vol.ready             = True
 
     for _, desc_grp in seqinfo_FLAIR.groupby('SeriesDescription'):
         run_idx = 0
@@ -379,7 +365,6 @@ def tse(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol.sub               = utils.clean_name(seq['PatientName'])
                 vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                 vol.bidsfields['run'] = run_idx
-                vol.ready             = True
 
 
 ########################################################################################################################
@@ -404,7 +389,6 @@ def ep2d_se(df: pandas.DataFrame, seq_regex: str) -> None:
                     vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                     vol.bidsfields['dir'] = direction
                     vol.bidsfields['run'] = run_idx
-                    vol.ready             = True
 
 
 ########################################################################################################################
@@ -416,7 +400,6 @@ def discard(df: pandas.DataFrame, seq_regex: str) -> None:
     for row_idx, seq in seqinfo.iterrows():
         vol                   = seq['Volume']
         vol.reason_not_ready  = f'discarded sequence {seq_regex}'
-        vol.ready             = False
 
 
 ########################################################################################################################

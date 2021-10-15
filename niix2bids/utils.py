@@ -182,7 +182,7 @@ def apply_bids_architecture(out_dir: str, volume_list: List[Volume]) -> None:
     log = get_loger()
 
     for vol in volume_list:
-        if vol.ready:  # only process correctly parsed volumes
+        if len(vol.tag)>0:  # only process correctly parsed volumes
 
             dir_path = os.path.join(
                 out_dir,
