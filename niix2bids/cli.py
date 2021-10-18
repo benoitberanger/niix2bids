@@ -10,38 +10,63 @@ from niix2bids import metadata
 
 ########################################################################################################################
 def format_args(args: argparse.Namespace) -> argparse.Namespace:
-    args.nifti_dir = os.path.abspath(args.nifti_dir)
-    args.out_dir   = os.path.abspath(args.out_dir  )
+
+    # in
+    if isinstance(args.in_dir, str):
+        args.in_dir = [args.in_dir]
+    args.in_dir = [os.path.abspath(one_dir) for one_dir in args.in_dir]
+
+    # out
+    args.out_dir = os.path.abspath(args.out_dir)
+
     return args
 
 
 ########################################################################################################################
 def main():
 
+    description="""
+    Create BIDS architecture from nifti files and .json sidecars.
+    This method expects DICOM converted by dcm2niix (https://github.com/rordenlab/dcm2niix)
+    """
+
+    epilog = f"niix2bids=={metadata.get_niix2bids_version()}"
+
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description="Create BIDS architecture from nifti files (and .json sidecars)",
-                                     epilog=f"niix2bids version {metadata.get_niix2bids_version()}")
+    parser = argparse.ArgumentParser(description=description,
+                                     epilog=epilog)
 
-    parser.add_argument("nifti_dir",
-                        help="nifti directory that will be parsed and transformed into BIDS architecture."
-                             "This directory is usually the output directory of dcm2niix.")
-    parser.add_argument("out_dir",
-                        help="Output directory, receiving the BIDS architecture.")
+    optional = parser._action_groups.pop()
+    required = parser.add_argument_group("Required arguments")
 
-    parser.add_argument("-v", "--verbose",
-                        help="increase output verbosity : -v / -vv / -vvv ...",
-                        action="count",
-                        default=0)
+    required.add_argument("-i", "--in_dir",
+                        help="Nifti directories that will be parsed and transformed into BIDS architecture. "
+                             "This directory is usually the output directory of dcm2niix. "
+                             "This argument accepts several paths. You can use syntax such as /path/to/nii/2021_*",
+                        nargs='+',
+                        metavar='DIR',
+                        required=True)
+    required.add_argument("-o","--out_dir",
+                        help="Output directory, receiving the BIDS architecture.",
+                        metavar='DIR',
+                        required=True)
 
-    parser.add_argument("--logfile",
-                        help="Write logfile (default=True)",
+    optional.add_argument("-v", "--version",
+                          action="version",
+                          version=metadata.get_niix2bids_version())
+
+    optional.add_argument("--logfile",
+                        help="write logfile (default=True)",
                         dest="logfile",
                         action="store_true")
-    parser.add_argument("--no-logfile",
+    optional.add_argument("--no-logfile",
                         dest="logfile",
                         action="store_false")
-    parser.set_defaults(logfile=True)
+    optional.set_defaults(logfile=True)
 
+    parser._action_groups.append(optional) # this trick is just so the --help option appears correctly
+
+    # Parse
     args = parser.parse_args()
 
     # Format args

@@ -10,23 +10,24 @@ However this package objective is to be 100% autmotatic.
 
 ## Usage
 ```
-usage: niix2bids [-h] [-v] [--logfile] [--no-logfile] nifti_dir out_dir
+usage: niix2bids [-h] -i DIR [DIR ...] -o DIR [-v] [--logfile] [--no-logfile]
 
-Create BIDS architecture from nifti files (and .json sidecars)
+Create BIDS architecture from nifti files and .json sidecars. This method expects DICOM converted by dcm2niix (https://github.com/rordenlab/dcm2niix)
 
-positional arguments:
-  nifti_dir      nifti directory that will be parsed and transformed into BIDS
-                 architecture.This directory is usually the output directory
-                 of dcm2niix.
-  out_dir        Output directory, receiving the BIDS architecture.
+Required arguments:
+  -i DIR [DIR ...], --in_dir DIR [DIR ...]
+                        Nifti directories that will be parsed and transformed into BIDS architecture. This directory is usually the output directory of dcm2niix. This argument accepts several paths. You can use syntax such as
+                        /path/to/nii/2021_*
+  -o DIR, --out_dir DIR
+                        Output directory, receiving the BIDS architecture.
 
 optional arguments:
-  -h, --help     show this help message and exit
-  -v, --verbose  increase output verbosity : -v / -vv / -vvv ...
-  --logfile      Write logfile (default=True)
+  -h, --help            show this help message and exit
+  -v, --version         show program's version number and exit
+  --logfile             write logfile (default=True)
   --no-logfile
 
-niix2bids version 0.0.1
+niix2bids==0.0.1
 ```
 
 ## Limitations

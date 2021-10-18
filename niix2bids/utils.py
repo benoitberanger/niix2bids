@@ -94,9 +94,10 @@ def logit(message, level=logging.INFO):
 def fetch_all_files(in_dir: str) -> List[str]:
 
     file_list = []
-    for root, dirs, files in os.walk(in_dir):
-        for file in files:
-            file_list.append(os.path.join(root, file))
+    for one_dir in in_dir:
+        for root, dirs, files in os.walk(one_dir):
+            for file in files:
+                file_list.append(os.path.join(root, file))
 
     if len(file_list) == 0:
         log = get_loger()

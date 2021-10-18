@@ -23,18 +23,19 @@ def run(args: argparse.Namespace) -> None:
     log.info(f"niix2bids=={metadata.get_niix2bids_version()}")
 
     # logs
-    log.info(f"nifti_dir : {args.nifti_dir}")
-    log.info(f"out_dir   : {args.out_dir  }")
+    log.info(f"in_dir : {args.in_dir}")
+    log.info(f"out_dir   : {args.out_dir}")
     if args.logfile:
-        log.info(f"logfile   : {args.out_dir  }")
+        log.info(f"logfile   : {log.__class__.root.handlers[1].baseFilename}")
 
     # check if input dir exists
-    if not os.path.exists(args.nifti_dir):
-        log.error(f"nifti_dir does not exist : {args.nifti_dir}")
-        sys.exit(1)
+    for one_dir in args.in_dir:
+        if not os.path.exists(one_dir):
+            log.error(f"in_dir does not exist : {one_dir}")
+            sys.exit(1)
 
     # read all dirs and establish file list
-    file_list = utils.fetch_all_files(args.nifti_dir)
+    file_list = utils.fetch_all_files(args.in_dir)
 
     # isolate .nii files
     file_list_nii = utils.isolate_nii_files(file_list)
