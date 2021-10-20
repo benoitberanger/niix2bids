@@ -183,6 +183,7 @@ def apply_bids_architecture(out_dir: str, volume_list: List[Volume]) -> None:
     log = get_loger()
     log_info = []
     log_warning = []
+    log_warning_not_interpreted = []
 
     for vol in volume_list:
         if len(vol.tag)>0:  # only process correctly parsed volumes
@@ -258,9 +259,11 @@ def apply_bids_architecture(out_dir: str, volume_list: List[Volume]) -> None:
                 else:
                     log_warning.append(f'{vol.reason_not_ready} : {vol.nii.path}')
             else:
-                log_warning.append(f'Nifti file not interpreted : {vol.nii.path}')
+                log_warning_not_interpreted.append(f'file not interpreted : {vol.nii.path}')
 
     # print them all, but in order
+    for msg in log_warning_not_interpreted:
+        log.warning(msg)
     for msg in log_warning:
         log.warning(msg)
     for msg in log_info:
