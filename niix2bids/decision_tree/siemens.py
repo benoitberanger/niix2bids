@@ -162,7 +162,7 @@ def diff(df: pandas.DataFrame, seq_regex: str) -> None:
                     vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                     vol.bidsfields['dir'] = direction
                     vol.bidsfields['run'] = run_idx
-                    if has_bval and has_bvec:
+                    if not has_bval and not has_bvec:
                         vol.tag           = ''
 
 
