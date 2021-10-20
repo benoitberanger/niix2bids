@@ -76,8 +76,8 @@ def tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
         return
     seqinfo = utils.slice_with_mracquistiontype(seqinfo, '3D')  # keep 3D images
 
-    seqinfo_T2w   = utils.slice_with_seqvariant(seqinfo, '_spc_')
-    seqinfo_FLAIR = utils.slice_with_seqvariant(seqinfo, '_spcir_')
+    seqinfo_T2w   = utils.slice_with_seqvariant(seqinfo, '_spcR?_')
+    seqinfo_FLAIR = utils.slice_with_seqvariant(seqinfo, '_spcirR?_')
 
     for _, desc_grp in seqinfo_T2w.groupby('SeriesDescription'):
         run_idx = 0
