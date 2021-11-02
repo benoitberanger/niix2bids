@@ -1,20 +1,19 @@
 # standard modules
-import logging                      # logging lib (terminal & file)
-import os                           # for path management
-from datetime import datetime       # to get current time
-import sys                          # to stop script execution on case of error
-import re                           # regular expressions
-import json                         # to write json files
-import time                         # to time execution of code
-from functools import wraps         # for decorator
-import traceback                    # to get the current function name
-import inspect                      # to get the current module name
-from typing import List,Dict,Tuple  # for function signature
+import logging                  # logging lib (terminal & file)
+import os                       # for path management
+from datetime import datetime   # to get current time
+import sys                      # to stop script execution on case of error
+import re                       # regular expressions
+import json                     # to write json files
+import time                     # to time execution of code
+from functools import wraps     # for decorator
+import traceback                # to get the current function name
+import inspect                  # to get the current module name
+from typing import List, Tuple  # for function signature
 
 # dependency modules
 
 # local modules
-
 from niix2bids import metadata
 from niix2bids.classes import Volume
 
@@ -186,7 +185,7 @@ def apply_bids_architecture(out_dir: str, volume_list: List[Volume]) -> None:
     log_warning_not_interpreted = []
 
     for vol in volume_list:
-        if len(vol.tag)>0:  # only process correctly parsed volumes
+        if len(vol.tag) > 0:  # only process correctly parsed volumes
 
             dir_path = os.path.join(
                 out_dir,

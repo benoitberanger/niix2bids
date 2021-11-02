@@ -54,7 +54,7 @@ def run(args: argparse.Namespace) -> None:
     niix2bids.decision_tree.siemens.run(volume_list)
 
     # perform files operations
-    utils.apply_bids_architecture(args.out_dir,volume_list)
+    utils.apply_bids_architecture(args.out_dir, volume_list)
 
     # write dataset_description.json
     utils.write_bids_dataset_description(args.out_dir)

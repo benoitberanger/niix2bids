@@ -1,5 +1,4 @@
 # standard modules
-import logging           # logging lib (terminal & file)
 import sys               # to stop script execution on case of error
 import re                # regular expressions
 from typing import List  # for function signature
@@ -98,13 +97,13 @@ def slice_with_mracquistiontype(df: pandas.DataFrame, regex: str) -> pandas.Data
 
 
 ########################################################################################################################
-def slice_with_imagetype(df: pandas.DataFrame, type: str) -> pandas.DataFrame:
+def slice_with_imagetype(df: pandas.DataFrame, imagetype: str) -> pandas.DataFrame:
     """
     ImageType example :
     ['ORIGINAL', 'PRIMARY', 'M', 'MB', 'TE1', 'ND', 'MOSAIC']
      0           1         >>2<<
      """
-    return df[df['ImageType'].apply(lambda x: x[2] == type)]
+    return df[df['ImageType'].apply(lambda x: x[2] == imagetype)]
 
 
 ########################################################################################################################

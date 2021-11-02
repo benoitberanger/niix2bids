@@ -1,6 +1,5 @@
 import os  # for path management
 import json  # json file loading
-import logging  # logging lib (terminal & file)
 
 
 ########################################################################################################################

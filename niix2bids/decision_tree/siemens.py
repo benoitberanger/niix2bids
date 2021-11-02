@@ -1,5 +1,4 @@
 # standard modules
-import logging           # logging lib (terminal & file)
 from typing import List  # for function signature
 
 # dependency modules
@@ -33,7 +32,7 @@ def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = pandas.concat([seqinfo_mag, seqinfo_T1map])
 
     # in case of mp2rage, there are 3 (or 4 wih T1map) images generated
-    # the SeriesDescription is automatically generated such as ProtocalName + suffix, where suffix = _INV1, _INV2,
+    # the SeriesDescription is automatically generated such as ProtocolName + suffix, where suffix = _INV1, _INV2,
     # _UNI_Images (and _T1_Images)
     descr_regex_list = ['.*_INV1$', '.*_INV2$', '.*_T1_Images$', '.*_UNI_Images$']
     suffix_list      = ['MP2RAGE' ,  'MP2RAGE', 'T1map'        , 'UNIT1'         ]
