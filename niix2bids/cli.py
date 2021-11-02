@@ -8,6 +8,7 @@ import os        # for path management
 import niix2bids
 from niix2bids import metadata
 
+
 ########################################################################################################################
 def format_args(args: argparse.Namespace) -> argparse.Namespace:
 
@@ -25,18 +26,26 @@ def format_args(args: argparse.Namespace) -> argparse.Namespace:
 ########################################################################################################################
 def main():
 
+    niix2bids_version = metadata.get_niix2bids_version()
+    bids_version = metadata.get_bids_version()
+
     description="""
     Create BIDS architecture from nifti files and .json sidecars.
     This method expects DICOM converted by dcm2niix (https://github.com/rordenlab/dcm2niix)
     """
 
-    epilog = f"niix2bids=={metadata.get_niix2bids_version()}"
+    epilog = f"niix2bids_version=={niix2bids_version} + bids_version=={bids_version}"
 
     # Parse command line arguments
     parser = argparse.ArgumentParser(description=description,
                                      epilog=epilog)
 
-    optional = parser._action_groups.pop()
+    # This is a strategy found on stackoverflow to seperate 'Required arguments' and 'Optional arguments'
+    # in a way --help display looks more readable
+    optional = parser._action_groups.pop()  # extract optonal arguments
+    optional.title = "Optional arguments"
+
+    # and now we add 'Required arguments'
     required = parser.add_argument_group("Required arguments")
 
     required.add_argument("-i", "--in_dir",
@@ -53,7 +62,7 @@ def main():
 
     optional.add_argument("-v", "--version",
                           action="version",
-                          version=metadata.get_niix2bids_version())
+                          version=niix2bids_version)
 
     optional.add_argument("--logfile",
                         help="write logfile (default=True)",
@@ -72,5 +81,5 @@ def main():
     # Format args
     args = format_args(args)
 
-    # Workflow
+    # Call workflow
     niix2bids.workflow.run(args)

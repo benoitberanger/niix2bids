@@ -12,22 +12,26 @@ However this package objective is to be 100% autmotatic.
 ```
 usage: niix2bids [-h] -i DIR [DIR ...] -o DIR [-v] [--logfile] [--no-logfile]
 
-Create BIDS architecture from nifti files and .json sidecars. This method expects DICOM converted by dcm2niix (https://github.com/rordenlab/dcm2niix)
+Create BIDS architecture from nifti files and .json sidecars. This method
+expects DICOM converted by dcm2niix (https://github.com/rordenlab/dcm2niix)
 
 Required arguments:
   -i DIR [DIR ...], --in_dir DIR [DIR ...]
-                        Nifti directories that will be parsed and transformed into BIDS architecture. This directory is usually the output directory of dcm2niix. This argument accepts several paths. You can use syntax such as
+                        Nifti directories that will be parsed and transformed
+                        into BIDS architecture. This directory is usually the
+                        output directory of dcm2niix. This argument accepts
+                        several paths. You can use syntax such as
                         /path/to/nii/2021_*
   -o DIR, --out_dir DIR
                         Output directory, receiving the BIDS architecture.
 
-optional arguments:
+Optional arguments:
   -h, --help            show this help message and exit
   -v, --version         show program's version number and exit
   --logfile             write logfile (default=True)
   --no-logfile
 
-niix2bids==0.0.1
+niix2bids_version==0.0.1 + bids_version==1.6.0
 ```
 
 ## Limitations
@@ -61,8 +65,8 @@ Run the command :
 
 ## Known issues
 
-Weird happend to me at installtion due to outdated version of `setuptools`, a packages bundled with `pip`
-When you create a new python environement, I never had problem. Here is an exmpample of lines to create a fresh `conda` environement :
+Weird things happend to me at installtion due to outdated version of `setuptools`, a packages bundled with `pip`.  
+When you create a new python environement, I never had problem. Here is an example of lines to create a fresh `conda` environement :
 ```
 conda create --name niix2bids_python3.9 # python3.9 runs faster than 3.6
 conda activate niix2bids_python3.9
