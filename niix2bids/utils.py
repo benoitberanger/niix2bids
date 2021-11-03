@@ -1,6 +1,7 @@
 # standard modules
 import logging                  # logging lib (terminal & file)
 import os                       # for path management
+import shutil                   # for copyfile
 from datetime import datetime   # to get current time
 import sys                      # to stop script execution on case of error
 import re                       # regular expressions
@@ -49,7 +50,7 @@ def init_logger(out_dir: str, write_file: bool):
 
 
 ########################################################################################################################
-def get_loger():
+def get_logger():
 
     fcn_name = traceback.extract_stack(None, 2)[0][2]  # get function name of the caller
 
@@ -99,7 +100,7 @@ def fetch_all_files(in_dir: str) -> List[str]:
                 file_list.append(os.path.join(root, file))
 
     if len(file_list) == 0:
-        log = get_loger()
+        log = get_logger()
         log.error(f"no file found in {in_dir}")
         sys.exit(1)
 
@@ -110,7 +111,7 @@ def fetch_all_files(in_dir: str) -> List[str]:
 ########################################################################################################################
 @logit('Keep only nifti files (.nii, .nii.gz).', logging.INFO)
 def isolate_nii_files(in_list: List[str]) -> List[str]:
-    log = get_loger()
+    log = get_logger()
 
     r = re.compile(r"(.*nii$)|(.*nii.gz$)$")
     file_list_nii = list(filter(r.match, in_list))
@@ -126,7 +127,7 @@ def isolate_nii_files(in_list: List[str]) -> List[str]:
 ########################################################################################################################
 @logit('Check if .json exist for each nifti file.', logging.INFO)
 def check_if_json_exists(file_list_nii: List[str]) -> Tuple[List[str], List[str]]:
-    log = get_loger()
+    log = get_logger()
 
     file_list_json = []
     for file in file_list_nii:
@@ -179,10 +180,30 @@ def assemble_bids_name(vol: Volume) -> str:
 
 
 ########################################################################################################################
-@logit('Apply BIDS architecture. This might take time, it involves lots of disk writing.', logging.INFO)
-def apply_bids_architecture(out_dir: str, volume_list: List[Volume]) -> None:
+def write_json(out_path_json: str, json_dict: str) -> None:
+    if not os.path.exists(out_path_json):
+        with open(out_path_json, 'w') as fp:        # write file
+            json.dump(json_dict, fp, indent=4)      # indent for prettiness
+            fp.write('\n')                          # for prettiness too
 
-    log                       = get_loger()
+
+########################################################################################################################
+def ln_or_cp_file(symlink_or_copyfile: str, in_path: str, out_path: str) -> None:
+
+    if not os.path.exists(out_path):
+        if symlink_or_copyfile == "symlink":
+            os.symlink(in_path, out_path)
+        elif symlink_or_copyfile == "copyfile":
+            shutil.copyfile(in_path, out_path)
+        else:
+            pass
+
+
+########################################################################################################################
+@logit('Apply BIDS architecture. This might take time, it involves lots of disk writing.', logging.INFO)
+def apply_bids_architecture(out_dir: str, volume_list: List[Volume], symlink_or_copyfile: str) -> None:
+
+    log                       = get_logger()
     log_info                  = []
     log_info_discard          = []
     log_warning               = []
@@ -220,8 +241,7 @@ def apply_bids_architecture(out_dir: str, volume_list: List[Volume]) -> None:
             # nii
             in_path_nii = vol.nii.path
             out_path_nii = os.path.join(dir_path, out_name + vol.ext)
-            if not os.path.exists(out_path_nii):
-                os.symlink(in_path_nii, out_path_nii)
+            ln_or_cp_file(symlink_or_copyfile, in_path_nii, out_path_nii)
 
             # ----------------------------------------------------------------------------------------------------------
             # json
@@ -233,10 +253,7 @@ def apply_bids_architecture(out_dir: str, volume_list: List[Volume]) -> None:
                 json_dict = vol.seqparam                        # copy original the json dict
                 del json_dict['Volume']                         # remove the pointer to Volume instance
                 json_dict['TaskName'] = vol.bidsfields['task']  # add TaskName
-                if not os.path.exists(out_path_json):
-                    with open(out_path_json, 'w') as fp:        # write file
-                        json.dump(json_dict, fp, indent=4)      # indent for prettiness
-                        fp.write('\n')                          # for prettiness too
+                write_json(out_path_json, json_dict)
 
             elif vol.tag == 'fmap' and vol.suffix == 'phasediff':
                 # for fmap, the phasediff .json must contain EchoTime1 and EchoTime2
@@ -245,30 +262,24 @@ def apply_bids_architecture(out_dir: str, volume_list: List[Volume]) -> None:
                 del json_dict['Volume']
                 json_dict['EchoTime1'] = json_dict['EchoTime'] - 0.00246
                 json_dict['EchoTime2'] = json_dict['EchoTime']
-                if not os.path.exists(out_path_json):
-                    with open(out_path_json, 'w') as fp:
-                        json.dump(json_dict, fp, indent=4)
-                        fp.write('\n')
+                write_json(out_path_json, json_dict)
 
             else:
-                if not os.path.exists(out_path_json):
-                    os.symlink(in_path_json, out_path_json)
+                ln_or_cp_file(symlink_or_copyfile, in_path_json, out_path_json)
 
             # ----------------------------------------------------------------------------------------------------------
             # bval
             if hasattr(vol, 'bval'):
                 in_path_bval = vol.bval.path
                 out_path_bval = os.path.join(dir_path, out_name + '.bval')
-                if not os.path.exists(out_path_bval):
-                    os.symlink(in_path_bval, out_path_bval)
+                ln_or_cp_file(symlink_or_copyfile, in_path_bval, out_path_bval)
 
             # ----------------------------------------------------------------------------------------------------------
             # bvec
             if hasattr(vol, 'bvec'):
                 in_path_bvec = vol.bvec.path
                 out_path_bvec = os.path.join(dir_path, out_name + '.bvec')
-                if not os.path.exists(out_path_bvec):
-                    os.symlink(in_path_bvec, out_path_bvec)
+                ln_or_cp_file(symlink_or_copyfile, in_path_bvec, out_path_bvec)
 
         elif len(vol.reason_not_ready) > 0:
             log_warning.append(f'{vol.reason_not_ready} : {vol.nii.path}')

@@ -9,7 +9,7 @@ import time                     # to time execution of code
 # local modules
 import niix2bids.decision_tree.siemens
 from niix2bids import utils, metadata
-from niix2bids.utils import get_loger
+from niix2bids.utils import get_logger
 
 
 ########################################################################################################################
@@ -19,14 +19,15 @@ def run(args: argparse.Namespace) -> None:
 
     # initialize logger (console & file)
     utils.init_logger(args.out_dir, args.logfile)
-    log = get_loger()
+    log = get_logger()
     log.info(f"niix2bids=={metadata.get_niix2bids_version()}")
 
     # logs
-    log.info(f"in_dir : {args.in_dir}")
-    log.info(f"out_dir   : {args.out_dir}")
+    log.info(f"in_dir  : {args.in_dir}")
+    log.info(f"out_dir : {args.out_dir}")
     if args.logfile:
-        log.info(f"logfile   : {log.__class__.root.handlers[1].baseFilename}")
+        log.info(f"logfile : {log.__class__.root.handlers[1].baseFilename}")
+    log.info(f"out_dir write method = {args.symlink_or_copyfile}")
 
     # check if input dir exists
     for one_dir in args.in_dir:
@@ -54,7 +55,7 @@ def run(args: argparse.Namespace) -> None:
     niix2bids.decision_tree.siemens.run(volume_list)
 
     # perform files operations
-    utils.apply_bids_architecture(args.out_dir, volume_list)
+    utils.apply_bids_architecture(args.out_dir, volume_list, args.symlink_or_copyfile)
 
     # write dataset_description.json
     utils.write_bids_dataset_description(args.out_dir)

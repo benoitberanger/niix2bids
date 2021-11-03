@@ -58,6 +58,18 @@ def main():
                           metavar='DIR',
                           required=True)
 
+    optional.add_argument("--symlink",
+                          help="Use symlink (default). The out_dir will contain symlinks, saving disk spaces",
+                          dest="symlink_or_copyfile",
+                          action="store_const",
+                          const="symlink")
+    optional.add_argument("--copyfile",
+                          help="Use copyfile. Original files will be copied in out_dir. !! be careful of disk space !!",
+                          dest="symlink_or_copyfile",
+                          action="store_const",
+                          const="copyfile")
+    optional.set_defaults(symlink_or_copyfile="symlink")
+
     optional.add_argument("-v", "--version",
                           action="version",
                           version=niix2bids_version)

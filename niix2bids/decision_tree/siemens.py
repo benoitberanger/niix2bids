@@ -8,7 +8,7 @@ import nibabel  # to load nifti header
 # local modules
 from niix2bids.decision_tree import utils
 from niix2bids.classes import Volume
-from niix2bids.utils import get_loger
+from niix2bids.utils import get_logger
 
 
 ########################################################################################################################
@@ -34,7 +34,7 @@ def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo_T1map = utils.slice_with_imagetype(seqinfo, 'T1 MAP')
     seqinfo_pha   = utils.slice_with_imagetype(seqinfo, 'P')
     if not seqinfo_pha.empty:
-        log = get_loger()
+        log = get_logger()
         log.warning(f"mp(2)rage part-phase not coded yet. Be careful !")
     seqinfo = pandas.concat([seqinfo_mag, seqinfo_T1map])
 
@@ -456,7 +456,7 @@ def discard(df: pandas.DataFrame, seq_regex: str) -> None:
 ########################################################################################################################
 def run(volume_list: List[Volume]) -> None:
 
-    log = get_loger()
+    log = get_logger()
 
     log.info(f'starting decision tree for "Siemens"... ')
 
