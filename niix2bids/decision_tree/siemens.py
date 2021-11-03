@@ -439,19 +439,17 @@ def run(volume_list: List[Volume]) -> None:
     # the approach is simple : the sequence name ('gre') defines which decision tree to apply
     list_seq_regex = [
         # [seq_regex             fcn name]
-        ['^tfl$'              , 'mprage' ],  # mprage & mp2rage
-        ['.*mp2rage.*'        , 'mprage' ],  # mp2rage WIP
-        ['^tse_vfl$'          , 'tse_vfl'],  # 3DT2 space & 3DFLAIR space_ir
-        ['.*diff.*'           , 'diff'   ],  # diffusion
-        ['.*(bold)|(pace).*'  , 'bold'   ],  # bold fmri
-        ['^gre_field_mapping$', 'fmap'   ],  # dual echo field map, with pre-substracted phase
-        ['^gre$'              , 'gre'    ],  # FLASH
-        ['^icm_gre$'          , 'gre'    ],  # FLASH specific at ICM, with better phase reconstruction, will be used for QSM
-        ['^tse$'              , 'tse'    ],  # tse, usually AX_2DT1 or AX_2DT2
-        ['.*ep2d_se.*'        , 'ep2d_se'],  # SpinEcho EPI
-        # ['asl'              , 'asl'    ],  # 2D or 3D : ASL, pASL, pCASL
-        # ['medic'            , 'medic'  ],  # dual echo T2*
-        ['^haste$'            , 'discard']   #
+        ['^tfl$'                , 'mprage' ],  # mprage & mp2rage
+        ['.*mp2rage.*'          , 'mprage' ],  # mp2rage WIP
+        ['^tse_vfl$'            , 'tse_vfl'],  # 3DT2 space & 3DFLAIR space_ir
+        ['.*diff.*'             , 'diff'   ],  # diffusion
+        ['(.*bold.*)|(.*pace.*)', 'bold'   ],  # bold fmri
+        ['^gre_field_mapping$'  , 'fmap'   ],  # dual echo field map, with pre-substracted phase
+        ['^gre$'                , 'gre'    ],  # FLASH
+        ['^icm_gre$'            , 'gre'    ],  # FLASH specific at ICM, with better phase reconstruction, will be used for QSM
+        ['^tse$'                , 'tse'    ],  # tse, usually AX_2DT1 or AX_2DT2
+        ['.*ep2d_se.*'          , 'ep2d_se'],  # SpinEcho EPI
+        ['^haste$'              , 'discard']   #
     ]
 
     # subject by subject sequence group
