@@ -138,6 +138,14 @@ def diff(df: pandas.DataFrame, seq_regex: str) -> None:
                     vol.bidsfields['run'] = run_idx
                     seqinfo = seqinfo.drop(row_idx)
 
+    # only keep 4D data
+    # ex : 1 volume can be acquired quickly to check subject position over time, so discard it, its not "BOLD"
+    for row_idx, seq in seqinfo.iterrows():
+        nii = nibabel.load( seq['Volume'].nii.path )
+        if nii.ndim < 4:  # check 4D
+            seq['Volume'].reason_not_ready = 'non 4D dwi volume'
+            seqinfo = seqinfo.drop(row_idx)
+
     # and now the normal volume
     for _, desc_grp in seqinfo.groupby('SeriesDescription'):
         run_idx = 0
