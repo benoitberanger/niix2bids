@@ -16,7 +16,14 @@ def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
     if seqinfo.empty:                                           # just to run the code faster
         return
-    seqinfo = utils.slice_with_mracquistiontype(seqinfo, '3D')  # keep 3D images
+
+    # keep 3D
+    seqinfo_3D = utils.slice_with_mracquistiontype(seqinfo, '3D')
+    seqinfo_bad = seqinfo.drop(seqinfo_3D.index)
+    for _, seq in seqinfo_bad.iterrows():
+        vol                   = seq['Volume']
+        vol.reason_not_ready  = f"non-3D acquisition with PulseSequenceDetails = {seq_regex}"
+    seqinfo = seqinfo_3D
 
     # here is a example of ImageType for all images for 1 sequence :
     # "ImageType": ["ORIGINAL", "PRIMARY", "M", "ND", "NORM"], <--- inv1
@@ -73,7 +80,14 @@ def tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
     if seqinfo.empty:                                           # just to run the code faster
         return
-    seqinfo = utils.slice_with_mracquistiontype(seqinfo, '3D')  # keep 3D images
+
+    # keep 3D
+    seqinfo_3D = utils.slice_with_mracquistiontype(seqinfo, '3D')
+    seqinfo_bad = seqinfo.drop(seqinfo_3D.index)
+    for _, seq in seqinfo_bad.iterrows():
+        vol                   = seq['Volume']
+        vol.reason_not_ready  = f"non-3D acquisition with PulseSequenceDetails = {seq_regex}"
+    seqinfo = seqinfo_3D
 
     seqinfo_T2w   = utils.slice_with_seqvariant(seqinfo, '_spcR?_')
     seqinfo_FLAIR = utils.slice_with_seqvariant(seqinfo, '_spcirR?_')
@@ -108,7 +122,14 @@ def diff(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
     if seqinfo.empty:                                           # just to run the code faster
         return
-    seqinfo = utils.slice_with_mracquistiontype(seqinfo, '2D')  # keep 2D images
+
+    # keep 2D
+    seqinfo_2D = utils.slice_with_mracquistiontype(seqinfo, '2D')
+    seqinfo_bad = seqinfo.drop(seqinfo_2D.index)
+    for _, seq in seqinfo_bad.iterrows():
+        vol                   = seq['Volume']
+        vol.reason_not_ready  = f"non-2D acquisition with PulseSequenceDetails = {seq_regex}"
+    seqinfo = seqinfo_2D
 
     # keep ORIGINAL images, discard ADC, FA, ColFA, ...
     seqinfo_original = utils.slice_with_imagetype_original(seqinfo)
@@ -143,7 +164,7 @@ def diff(df: pandas.DataFrame, seq_regex: str) -> None:
     for row_idx, seq in seqinfo.iterrows():
         nii = nibabel.load( seq['Volume'].nii.path )
         if nii.ndim < 4:  # check 4D
-            seq['Volume'].reason_not_ready = 'non 4D dwi volume'
+            seq['Volume'].reason_not_ready = 'non-4D dwi volume'
             seqinfo = seqinfo.drop(row_idx)
 
     # and now the normal volume
@@ -207,7 +228,7 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
     for row_idx, seq in seqinfo.iterrows():
         nii = nibabel.load( seq['Volume'].nii.path )
         if nii.ndim < 4:  # check 4D
-            seq['Volume'].reason_not_ready = 'non 4D bold volume'
+            seq['Volume'].reason_not_ready = 'non-4D bold volume'
             seqinfo = seqinfo.drop(row_idx)
 
     # separate magnitude & phase images
@@ -258,7 +279,14 @@ def fmap(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
     if seqinfo.empty:                                           # just to run the code faster
         return
-    seqinfo = utils.slice_with_mracquistiontype(seqinfo, '2D')  # keep 2D images
+
+    # keep 2D
+    seqinfo_2D = utils.slice_with_mracquistiontype(seqinfo, '2D')
+    seqinfo_bad = seqinfo.drop(seqinfo_2D.index)
+    for _, seq in seqinfo_bad.iterrows():
+        vol                   = seq['Volume']
+        vol.reason_not_ready  = f"non-2D acquisition with PulseSequenceDetails = {seq_regex}"
+    seqinfo = seqinfo_2D
 
     # separate magnitude & phase images
 
@@ -379,7 +407,14 @@ def ep2d_se(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
     if seqinfo.empty:                                           # just to run the code faster
         return
-    seqinfo = utils.slice_with_mracquistiontype(seqinfo, '2D')  # keep 2D images
+
+    # keep 2D
+    seqinfo_2D = utils.slice_with_mracquistiontype(seqinfo, '2D')
+    seqinfo_bad = seqinfo.drop(seqinfo_2D.index)
+    for _, seq in seqinfo_bad.iterrows():
+        vol                   = seq['Volume']
+        vol.reason_not_ready  = f"non-2D acquisition with PulseSequenceDetails = {seq_regex}"
+    seqinfo = seqinfo_2D
 
     for _, desc_grp in seqinfo.groupby('SeriesDescription'):
         run_idx = 0
@@ -404,9 +439,18 @@ def discard(df: pandas.DataFrame, seq_regex: str) -> None:
     if seqinfo.empty:                                  # just to run the code faster
         return
 
-    for row_idx, seq in seqinfo.iterrows():
-        vol                   = seq['Volume']
-        vol.reason_not_ready  = f'discarded sequence {seq_regex}'
+    for _, desc_grp in seqinfo.groupby('SeriesDescription'):
+        run_idx = 0
+        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
+            run_idx += 1
+            for row_idx, seq in ser_grp.iterrows():
+                vol                   = seq['Volume']
+                vol.tag               = 'DISCARD'
+                vol.suffix            = ''
+                vol.sub               = utils.clean_name(seq['PatientName'])
+                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+                vol.bidsfields['run'] = run_idx
+                vol.reason_not_ready  = f'discard PulseSequenceDetails = {seq_regex}'
 
 
 ########################################################################################################################
@@ -455,7 +499,31 @@ def run(volume_list: List[Volume]) -> None:
     # subject by subject sequence group
     df_by_subject = df.groupby('PatientName')
 
+    # call each routine depending on the sequence name
     for name, group in df_by_subject:               # loop over subjects
         for seq_regex, fcn_name in list_seq_regex:  # loop over sequence decision tree
             func = eval(fcn_name)   # fetch the name of the function to call dynamically
             func(group, seq_regex)  # execute the function
+
+    # deal with unknown sequences
+    for _, desc_grp in df.groupby('SeriesDescription'):
+        run_idx = 0
+        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
+            run_idx += 1
+            for row_idx, seq in ser_grp.iterrows():
+                vol                       = seq['Volume']
+                # here is the important part : if we already parsed the the sequence, then skip it, else tag it UNKNOWN
+                if len(vol.tag) > 0:
+                    pass
+                elif len(vol.reason_not_ready) > 0:
+                    pass
+                else:
+                    vol.tag               = 'UNKNOWN'
+                    vol.suffix            = ''
+                    vol.sub               = utils.clean_name(seq['PatientName'])
+                    vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+                    vol.bidsfields['run'] = run_idx
+                    vol.reason_not_ready  = f"unknown PulseSequenceDetails = {seq['PulseSequenceDetails']}"
+
+    # all done
+    log.info(f'"Siemens" decision tree done')

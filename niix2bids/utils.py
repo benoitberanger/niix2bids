@@ -170,7 +170,10 @@ def assemble_bids_name(vol: Volume) -> str:
     for key, value in vol.bidsfields.items():
         bidsfields += '_' + key + '-' + str(value)
 
-    name = 'sub-' + vol.sub + bidsfields + '_' + vol.suffix
+    if len(vol.suffix) > 0:
+        name = 'sub-' + vol.sub + bidsfields + '_' + vol.suffix
+    else:
+        name = 'sub-' + vol.sub + bidsfields
 
     return name
 
@@ -179,18 +182,34 @@ def assemble_bids_name(vol: Volume) -> str:
 @logit('Apply BIDS architecture. This might take time, it involves lots of disk writing.', logging.INFO)
 def apply_bids_architecture(out_dir: str, volume_list: List[Volume]) -> None:
 
-    log = get_loger()
-    log_info = []
-    log_warning = []
-    log_warning_not_interpreted = []
+    log                       = get_loger()
+    log_info                  = []
+    log_info_discard          = []
+    log_warning               = []
+    log_warning_unknown       = []
+    log_error_not_interpreted = []
 
     for vol in volume_list:
+
         if len(vol.tag) > 0:  # only process correctly parsed volumes
 
-            dir_path = os.path.join(
-                out_dir,
-                "sub-" + vol.sub,
-                vol.tag)
+            if vol.tag == 'DISCARD':
+                dir_path = os.path.join(
+                    out_dir,
+                    'DISCARD')
+                log_info_discard.append(f'{vol.reason_not_ready} : {vol.nii.path}')
+
+            elif vol.tag == 'UNKNOWN':
+                dir_path = os.path.join(
+                    out_dir,
+                    'UNKNOWN')
+                log_warning_unknown.append(f'{vol.reason_not_ready} : {vol.nii.path}')
+
+            else:
+                dir_path = os.path.join(
+                    out_dir,
+                    "sub-" + vol.sub,
+                    vol.tag)
 
             # recursive directory creation, and do not raise error if already exists
             os.makedirs(dir_path, exist_ok=True)
@@ -251,20 +270,21 @@ def apply_bids_architecture(out_dir: str, volume_list: List[Volume]) -> None:
                 if not os.path.exists(out_path_bvec):
                     os.symlink(in_path_bvec, out_path_bvec)
 
+        elif len(vol.reason_not_ready) > 0:
+            log_warning.append(f'{vol.reason_not_ready} : {vol.nii.path}')
+
         else:
-            if vol.reason_not_ready:
-                if vol.reason_not_ready.find('discard') > -1:
-                    log_info.append(f'{vol.reason_not_ready} : {vol.nii.path}')
-                else:
-                    log_warning.append(f'{vol.reason_not_ready} : {vol.nii.path}')
-            else:
-                log_warning_not_interpreted.append(f'file not interpreted : {vol.nii.path}')
+            log_error_not_interpreted.append(f'file not interpreted : {vol.nii.path}')
 
     # print them all, but in order
-    for msg in log_warning_not_interpreted:
+    for msg in log_error_not_interpreted:
+        log.error(msg)
+    for msg in log_warning_unknown:
         log.warning(msg)
     for msg in log_warning:
         log.warning(msg)
+    for msg in log_info_discard:
+        log.info(msg)
     for msg in log_info:
         log.info(msg)
 
@@ -314,3 +334,5 @@ def write_bids_other_files(out_dir: str) -> None:
     # .bidsignore
     with open(os.path.join(out_dir, '.bidsignore'), 'w') as fp:
         fp.write('log_* \n')
+        fp.write('UNKNOWN \n')
+        fp.write('DISCARD \n')
