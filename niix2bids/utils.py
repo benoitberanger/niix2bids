@@ -196,7 +196,7 @@ def ln_or_cp_file(symlink_or_copyfile: str, in_path: str, out_path: str) -> None
         elif symlink_or_copyfile == "copyfile":
             shutil.copyfile(in_path, out_path)
         else:
-            pass
+            raise RuntimeError('??? coding error')
 
 
 ########################################################################################################################

@@ -1,6 +1,6 @@
 # standard modules
 import argparse  # parser of the CLI
-import os  # for path management
+import os        # for path management
 
 # dependency modules
 
@@ -11,8 +11,9 @@ from niix2bids import metadata
 
 ########################################################################################################################
 def format_args(args: argparse.Namespace) -> argparse.Namespace:
+
     # in
-    if isinstance(args.in_dir, str):
+    if isinstance(args.in_dir, str): # force single str to be list, for easier management
         args.in_dir = [args.in_dir]
     args.in_dir = [os.path.abspath(one_dir) for one_dir in args.in_dir]
 
@@ -23,7 +24,8 @@ def format_args(args: argparse.Namespace) -> argparse.Namespace:
 
 
 ########################################################################################################################
-def main():
+def main() -> None:
+
     niix2bids_version = metadata.get_niix2bids_version()
     bids_version = metadata.get_bids_version()
 
