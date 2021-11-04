@@ -94,10 +94,14 @@ def load_config_file(config_file: str) -> dict:
     log = get_logger()
 
     if os.path.exists(config_file):
-        with open(config_file, 'r') as fp:
-            additional_config = json.load(fp)
-        log.info(f"using additonal config_file : {config_file}")
-        return additional_config
+        if os.path.isfile(config_file):
+            with open(config_file, 'r') as fp:
+                additional_config = json.load(fp)
+            log.info(f"using additional config_file : {config_file}")
+            return additional_config
+        else:
+            log.critical(f"config_file is not a file : {config_file}")
+            sys.exit(1)
     else:
         log.critical(f"config_file does not exist : {config_file}")
         sys.exit(1)
