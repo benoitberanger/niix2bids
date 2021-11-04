@@ -1,0 +1,7 @@
+{
+  "Siemens": {
+    "prog_diff": "ep2d_stejskal_386",
+    "prog_gre": "^icm_gre$",
+    "prog_mprage": "^cstfl_wip925b"
+  }
+}

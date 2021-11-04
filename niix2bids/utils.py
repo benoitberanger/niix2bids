@@ -90,6 +90,20 @@ def logit(message, level=logging.INFO):
 
 
 ########################################################################################################################
+def load_config_file(config_file: str) -> dict:
+    log = get_logger()
+
+    if os.path.exists(config_file):
+        with open(config_file, 'r') as fp:
+            additional_config = json.load(fp)
+        log.info(f"using additonal config_file : {config_file}")
+        return additional_config
+    else:
+        log.critical(f"config_file does not exist : {config_file}")
+        sys.exit(1)
+
+
+########################################################################################################################
 @logit('Fetch all files recursively. This might take time, it involves exploring the whole disk tree.', logging.INFO)
 def fetch_all_files(in_dir: str) -> List[str]:
 

@@ -12,7 +12,7 @@ from niix2bids.utils import get_logger
 
 
 ########################################################################################################################
-def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
+def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
     if seqinfo.empty:                                           # just to run the code faster
         return
@@ -76,7 +76,7 @@ def mprage(df: pandas.DataFrame, seq_regex: str) -> None:
 
 
 ########################################################################################################################
-def tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
+def prog_tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
     if seqinfo.empty:                                           # just to run the code faster
         return
@@ -118,7 +118,7 @@ def tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
 
 
 ########################################################################################################################
-def diff(df: pandas.DataFrame, seq_regex: str) -> None:
+def prog_diff(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
     if seqinfo.empty:                                           # just to run the code faster
         return
@@ -195,7 +195,7 @@ def diff(df: pandas.DataFrame, seq_regex: str) -> None:
 
 
 ########################################################################################################################
-def bold(df: pandas.DataFrame, seq_regex: str) -> None:
+def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
     if seqinfo.empty:                                           # just to run the code faster
         return
@@ -275,7 +275,7 @@ def bold(df: pandas.DataFrame, seq_regex: str) -> None:
 
 
 ########################################################################################################################
-def fmap(df: pandas.DataFrame, seq_regex: str) -> None:
+def prog_fmap(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
     if seqinfo.empty:                                           # just to run the code faster
         return
@@ -320,7 +320,7 @@ def fmap(df: pandas.DataFrame, seq_regex: str) -> None:
 
 
 ########################################################################################################################
-def gre(df: pandas.DataFrame, seq_regex: str) -> None:
+def prog_gre(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)  # get list of corresponding sequence
     if seqinfo.empty:                                  # just to run the code faster
         return
@@ -369,7 +369,7 @@ def gre(df: pandas.DataFrame, seq_regex: str) -> None:
 
 
 ########################################################################################################################
-def tse(df: pandas.DataFrame, seq_regex: str) -> None:
+def prog_tse(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)  # get list of corresponding sequence
     if seqinfo.empty:                                  # just to run the code faster
         return
@@ -403,7 +403,7 @@ def tse(df: pandas.DataFrame, seq_regex: str) -> None:
 
 
 ########################################################################################################################
-def ep2d_se(df: pandas.DataFrame, seq_regex: str) -> None:
+def prog_ep2d_se(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
     if seqinfo.empty:                                           # just to run the code faster
         return
@@ -434,7 +434,7 @@ def ep2d_se(df: pandas.DataFrame, seq_regex: str) -> None:
 
 
 ########################################################################################################################
-def discard(df: pandas.DataFrame, seq_regex: str) -> None:
+def prog_discard(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_seqname(df, seq_regex)  # get list of corresponding sequence
     if seqinfo.empty:                                  # just to run the code faster
         return
@@ -454,7 +454,7 @@ def discard(df: pandas.DataFrame, seq_regex: str) -> None:
 
 
 ########################################################################################################################
-def run(volume_list: List[Volume]) -> None:
+def run(volume_list: List[Volume], additional_config: dict) -> None:
 
     log = get_logger()
 
@@ -483,17 +483,16 @@ def run(volume_list: List[Volume]) -> None:
     # the approach is simple : the sequence name ('gre') defines which decision tree to apply
     list_seq_regex = [
         # [seq_regex             fcn name]
-        ['^tfl$'                , 'mprage' ],  # mprage & mp2rage
-        ['.*mp2rage.*'          , 'mprage' ],  # mp2rage WIP
-        ['^tse_vfl$'            , 'tse_vfl'],  # 3DT2 space & 3DFLAIR space_ir
-        ['.*diff.*'             , 'diff'   ],  # diffusion
-        ['(.*bold.*)|(.*pace.*)', 'bold'   ],  # bold fmri
-        ['^gre_field_mapping$'  , 'fmap'   ],  # dual echo field map, with pre-substracted phase
-        ['^gre$'                , 'gre'    ],  # FLASH
-        ['^icm_gre$'            , 'gre'    ],  # FLASH specific at ICM, with better phase reconstruction, will be used for QSM
-        ['^tse$'                , 'tse'    ],  # tse, usually AX_2DT1 or AX_2DT2
-        ['.*ep2d_se.*'          , 'ep2d_se'],  # SpinEcho EPI
-        ['^haste$'              , 'discard']   #
+        ['^tfl$'                , 'prog_mprage' ],  # mprage & mp2rage
+        ['.*mp2rage.*'          , 'prog_mprage' ],  # mp2rage WIP
+        ['^tse_vfl$'            , 'prog_tse_vfl'],  # 3DT2 space & 3DFLAIR space_ir
+        ['.*diff.*'             , 'prog_diff'   ],  # diffusion
+        ['(.*bold.*)|(.*pace.*)', 'prog_bold'   ],  # bold fmri
+        ['^gre_field_mapping$'  , 'prog_fmap'   ],  # dual echo field map, with pre-substracted phase
+        ['^gre$'                , 'prog_gre'    ],  # FLASH
+        ['^tse$'                , 'prog_tse'    ],  # tse, usually AX_2DT1 or AX_2DT2
+        ['.*ep2d_se.*'          , 'prog_ep2d_se'],  # SpinEcho EPI
+        ['^haste$'              , 'prog_discard']   #
     ]
 
     # subject by subject sequence group
@@ -504,6 +503,9 @@ def run(volume_list: List[Volume]) -> None:
         for seq_regex, fcn_name in list_seq_regex:  # loop over sequence decision tree
             func = eval(fcn_name)   # fetch the name of the function to call dynamically
             func(group, seq_regex)  # execute the function
+        for fcn_name, seq_regex in additional_config['Siemens'].items():
+            func = eval(fcn_name)
+            func(group, seq_regex)
 
     # deal with unknown sequences
     for _, desc_grp in df.groupby('SeriesDescription'):

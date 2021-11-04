@@ -24,7 +24,7 @@ def format_args(args: argparse.Namespace) -> argparse.Namespace:
 
 
 ########################################################################################################################
-def main() -> None:
+def get_parser() -> argparse.ArgumentParser:
 
     niix2bids_version = metadata.get_niix2bids_version()
     bids_version = metadata.get_bids_version()
@@ -72,10 +72,6 @@ def main() -> None:
                           const="copyfile")
     optional.set_defaults(symlink_or_copyfile="symlink")
 
-    optional.add_argument("-v", "--version",
-                          action="version",
-                          version=niix2bids_version)
-
     optional.add_argument("--logfile",
                           help="write logfile (default=True)",
                           dest="logfile",
@@ -85,13 +81,30 @@ def main() -> None:
                           action="store_false")
     optional.set_defaults(logfile=True)
 
+    optional.add_argument("-c", "--config_file",
+                          help="If you want to use non-coded sequences such as WIP or C2P, "
+                               "you can provide a config file. "
+                               "Example file is located in [niix2bids]/config_file/example.json",
+                          dest="config_file",
+                          metavar='FILE',
+                          default=os.path.join( os.path.dirname(niix2bids.__path__[0]), 'config_file', 'example.json'))
+
+    optional.add_argument("-v", "--version",
+                          action="version",
+                          version=niix2bids_version)
+
     parser._action_groups.append(optional)  # this trick is just so the --help option appears correctly
 
-    # Parse
-    args = parser.parse_args()
+    return parser
 
-    # Format args
-    args = format_args(args)
+
+########################################################################################################################
+def main() -> None:
+
+    # Parse inputs
+    parser = get_parser()       # Fetch my parser
+    args = parser.parse_args()  # Parse
+    args = format_args(args)    # Format args
 
     # Call workflow
     niix2bids.workflow.run(args)
