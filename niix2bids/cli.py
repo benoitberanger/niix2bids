@@ -84,7 +84,7 @@ def get_parser() -> argparse.ArgumentParser:
     optional.add_argument("-c", "--config_file",
                           help="If you want to use non-coded sequences such as WIP or C2P, "
                                "you can provide a config file. "
-                               "Example file is located in [niix2bids]/config_file/example.json",
+                               "Default file is located in [niix2bids]/config_file/siemens.py",
                           dest="config_file",
                           metavar='FILE',
                           default=os.path.join( os.path.dirname(niix2bids.__path__[0]), 'config_file', 'siemens.py'))
