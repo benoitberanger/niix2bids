@@ -87,7 +87,7 @@ def get_parser() -> argparse.ArgumentParser:
                                "Example file is located in [niix2bids]/config_file/example.json",
                           dest="config_file",
                           metavar='FILE',
-                          default=os.path.join( os.path.dirname(niix2bids.__path__[0]), 'config_file', 'example.json'))
+                          default=os.path.join( os.path.dirname(niix2bids.__path__[0]), 'config_file', 'siemens.py'))
 
     optional.add_argument("-v", "--version",
                           action="version",

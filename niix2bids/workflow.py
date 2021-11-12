@@ -1,8 +1,8 @@
 # standard modules
-import argparse                 # just for function signature
-import os                       # for path management
-import sys                      # to stop script execution on case of error
-import time                     # to time execution of code
+import argparse  # just for function signature
+import os        # for path management
+import sys       # to stop script execution on case of error
+import time      # to time execution of code
 
 # dependency modules
 
@@ -36,7 +36,7 @@ def run(args: argparse.Namespace) -> None:
             sys.exit(1)
 
     # load config file
-    from config_file.siemens import config
+    config = utils.load_config_file(args.config_file)
 
     # read all dirs and establish file list
     file_list = utils.fetch_all_files(args.in_dir)

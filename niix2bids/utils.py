@@ -11,6 +11,7 @@ from functools import wraps     # for decorator
 import traceback                # to get the current function name
 import inspect                  # to get the current module name
 from typing import List, Tuple  # for function signature
+import runpy                    # to run config script
 
 # dependency modules
 
@@ -90,15 +91,19 @@ def logit(message, level=logging.INFO):
 
 
 ########################################################################################################################
-def load_config_file(config_file: str) -> dict:
+def load_config_file(config_file: str) -> list:
     log = get_logger()
 
     if os.path.exists(config_file):
         if os.path.isfile(config_file):
-            with open(config_file, 'r') as fp:
-                additional_config = json.load(fp)
-            log.info(f"using additional config_file : {config_file}")
-            return additional_config
+            script_content = runpy.run_path(config_file)
+            if "config" in script_content:
+                config = script_content['config']
+                log.info(f"using config_file : {config_file}")
+                return config
+            else:
+                log.critical(f"config_file incorrect (no 'config' variable inside) : {config_file}")
+                sys.exit(1)
         else:
             log.critical(f"config_file is not a file : {config_file}")
             sys.exit(1)

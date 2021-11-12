@@ -1,5 +1,5 @@
 # the approach is simple : the sequence name ('gre') defines which decision tree to apply
-products = [
+product = [
     # [seq_regex             fcn name]
     ['^tfl$'                , 'prog_mprage' ],  # mprage & mp2rage
     ['.*mp2rage.*'          , 'prog_mprage' ],  # mp2rage WIP
@@ -23,4 +23,4 @@ c2p = [
 ]
 
 # the "output" variable has to be called "config"
-config = products + wip + c2p
+config = product + wip + c2p
