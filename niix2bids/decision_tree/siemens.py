@@ -454,7 +454,7 @@ def prog_discard(df: pandas.DataFrame, seq_regex: str) -> None:
 
 
 ########################################################################################################################
-def run(volume_list: List[Volume], config: dict) -> None:
+def run(volume_list: List[Volume], config: list) -> None:
 
     log = get_logger()
 
