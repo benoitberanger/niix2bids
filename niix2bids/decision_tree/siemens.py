@@ -454,7 +454,7 @@ def prog_discard(df: pandas.DataFrame, seq_regex: str) -> None:
 
 
 ########################################################################################################################
-def run(volume_list: List[Volume], additional_config: dict) -> None:
+def run(volume_list: List[Volume], config: dict) -> None:
 
     log = get_logger()
 
@@ -480,32 +480,14 @@ def run(volume_list: List[Volume], additional_config: dict) -> None:
     # %CustomerSeq%_cmrr_mbep2d_bold -> cmrr_mbep2d_bold
     df['PulseSequenceDetails'] = df['PulseSequenceDetails'].apply(lambda s: s.rsplit("%_")[1])
 
-    # the approach is simple : the sequence name ('gre') defines which decision tree to apply
-    list_seq_regex = [
-        # [seq_regex             fcn name]
-        ['^tfl$'                , 'prog_mprage' ],  # mprage & mp2rage
-        ['.*mp2rage.*'          , 'prog_mprage' ],  # mp2rage WIP
-        ['^tse_vfl$'            , 'prog_tse_vfl'],  # 3DT2 space & 3DFLAIR space_ir
-        ['.*diff.*'             , 'prog_diff'   ],  # diffusion
-        ['(.*bold.*)|(.*pace.*)', 'prog_bold'   ],  # bold fmri
-        ['^gre_field_mapping$'  , 'prog_fmap'   ],  # dual echo field map, with pre-substracted phase
-        ['^gre$'                , 'prog_gre'    ],  # FLASH
-        ['^tse$'                , 'prog_tse'    ],  # tse, usually AX_2DT1 or AX_2DT2
-        ['.*ep2d_se.*'          , 'prog_ep2d_se'],  # SpinEcho EPI
-        ['^haste$'              , 'prog_discard']   #
-    ]
-
     # subject by subject sequence group
     df_by_subject = df.groupby('PatientName')
 
     # call each routine depending on the sequence name
     for name, group in df_by_subject:               # loop over subjects
-        for seq_regex, fcn_name in list_seq_regex:  # loop over sequence decision tree
+        for seq_regex, fcn_name in config:  # loop over sequence decision tree
             func = eval(fcn_name)   # fetch the name of the function to call dynamically
             func(group, seq_regex)  # execute the function
-        for fcn_name, seq_regex in additional_config['Siemens'].items():
-            func = eval(fcn_name)
-            func(group, seq_regex)
 
     # deal with unknown sequences
     for _, desc_grp in df.groupby('SeriesDescription'):

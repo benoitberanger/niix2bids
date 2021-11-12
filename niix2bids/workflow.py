@@ -35,8 +35,8 @@ def run(args: argparse.Namespace) -> None:
             log.error(f"in_dir does not exist : {one_dir}")
             sys.exit(1)
 
-    # load additional config file
-    additional_config = utils.load_config_file(args.config_file)
+    # load config file
+    from config_file.siemens import config
 
     # read all dirs and establish file list
     file_list = utils.fetch_all_files(args.in_dir)
@@ -55,7 +55,7 @@ def run(args: argparse.Namespace) -> None:
 
     # apply decision tree
     # !! here, only Siemens is implemented !!
-    niix2bids.decision_tree.siemens.run(volume_list, additional_config)
+    niix2bids.decision_tree.siemens.run(volume_list, config)
 
     # perform files operations
     utils.apply_bids_architecture(args.out_dir, volume_list, args.symlink_or_copyfile)
