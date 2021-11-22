@@ -2,7 +2,6 @@
 product = [
     # [seq_regex             fcn name]
     ['^tfl$'                , 'prog_mprage' ],  # mprage & mp2rage
-    ['.*mp2rage.*'          , 'prog_mprage' ],  # mp2rage WIP
     ['^tse_vfl$'            , 'prog_tse_vfl'],  # 3DT2 space & 3DFLAIR space_ir
     ['.*diff.*'             , 'prog_diff'   ],  # diffusion
     ['(.*bold.*)|(.*pace.*)', 'prog_bold'   ],  # bold fmri
@@ -14,6 +13,7 @@ product = [
 ]
 
 wip = [
+    ['.*mp2rage.*'          , 'prog_mprage' ],  # mp2rage WIP
     ["ep2d_stejskal_386"    , "prog_diff"   ],  # diffusion WIP
     ["cstfl_wip925b"        , "prog_mprage" ],  # compressed sensing mprage & mp2rage
 ]
