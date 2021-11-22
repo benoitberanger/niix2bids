@@ -89,8 +89,8 @@ def prog_tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
         vol.reason_not_ready  = f"non-3D acquisition with PulseSequenceDetails = {seq_regex}"
     seqinfo = seqinfo_3D
 
-    seqinfo_T2w   = utils.slice_with_seqvariant(seqinfo, '_spcR?_')
-    seqinfo_FLAIR = utils.slice_with_seqvariant(seqinfo, '_spcirR?_')
+    seqinfo_T2w   = utils.slice_with_seqvariant(seqinfo, '.spcR?_')
+    seqinfo_FLAIR = utils.slice_with_seqvariant(seqinfo, '.spcirR?_')
 
     for _, desc_grp in seqinfo_T2w.groupby('SeriesDescription'):
         run_idx = 0
