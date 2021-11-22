@@ -76,8 +76,10 @@ class Volume:
     # ------------------------------------------------------------------------------------------------------------------
     def load_json(self):
         with open(self.json.path, "r") as file:
-            self.seqparam = json.load(file)  # load the .json content as dict
-            self.seqparam['Volume'] = self   # save also in the dict a pointer to the object itself
+            content = file.read()
+            clean = content.replace(r'\\',r'_')  # in ~2021, dcm2iix escaping character changed from _ to \\
+            self.seqparam = json.loads(clean)    # load the .json content as dict
+            self.seqparam['Volume'] = self       # save also in the dict a pointer to the object itself
 
     # ------------------------------------------------------------------------------------------------------------------
     def __repr__(self):
