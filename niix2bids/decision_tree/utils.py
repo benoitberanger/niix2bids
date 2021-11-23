@@ -46,10 +46,8 @@ def assert_has_patientname(df: pandas.DataFrame) -> None:
 
     log = get_logger()
 
-    is_key_PatientName = 'PatientName' in df.columns
-
-    if not is_key_PatientName:
-        log.error(f'no .json file has "PatientName" field')
+    if 'PatientName' not in df.columns:
+        log.error(f'No .json file has "PatientName" field. When using dcm2niix, use "-ba n" option.')
         sys.exit(1)
 
     has_PatientName = df['PatientName'].isna() == False
@@ -77,18 +75,8 @@ def assert_key_val(df: pandas.DataFrame, key: str, value: str) -> None:
 
 
 ########################################################################################################################
-def slice_with_seqname(df: pandas.DataFrame, regex: str) -> pandas.DataFrame:
-    return df[df['PulseSequenceDetails'].str.match(regex)]
-
-
-########################################################################################################################
-def slice_with_seriesdescription(df: pandas.DataFrame, regex: str) -> pandas.DataFrame:
-    return df[df['SeriesDescription'].str.match(regex)]
-
-
-########################################################################################################################
-def slice_with_seqvariant(df: pandas.DataFrame, regex: str) -> pandas.DataFrame:
-    return df[df['SequenceName'].str.match(regex)]
+def slice_with_genericfield(df: pandas.DataFrame, fieldname: str, regex: str) -> pandas.DataFrame:
+    return df[df[fieldname].str.match(regex)]
 
 
 ########################################################################################################################
@@ -135,3 +123,13 @@ def get_phase_encoding_direction(input_str: str) -> str:
         return 'LR'
     if input_str == 'i-':
         return 'RL'
+
+
+########################################################################################################################
+def keep_ND(df: pandas.DataFrame, dim: str, seq_regex: str) -> pandas.DataFrame:
+    df_ND = slice_with_genericfield(df, 'MRAcquisitionType', dim)
+    df_bad = df.drop(df_ND.index)
+    for _, seq in df_bad.iterrows():
+        vol                   = seq['Volume']
+        vol.reason_not_ready  = f"non-{dim} acquisition with PulseSequenceDetails = {seq_regex}"
+    return df_ND

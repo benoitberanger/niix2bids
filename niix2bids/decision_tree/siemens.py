@@ -13,17 +13,12 @@ from niix2bids.utils import get_logger
 
 ########################################################################################################################
 def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
-    if seqinfo.empty:                                           # just to run the code faster
+    seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
+    if seqinfo.empty:  # just to run the code faster
         return
 
     # keep 3D
-    seqinfo_3D = utils.slice_with_mracquistiontype(seqinfo, '3D')
-    seqinfo_bad = seqinfo.drop(seqinfo_3D.index)
-    for _, seq in seqinfo_bad.iterrows():
-        vol                   = seq['Volume']
-        vol.reason_not_ready  = f"non-3D acquisition with PulseSequenceDetails = {seq_regex}"
-    seqinfo = seqinfo_3D
+    seqinfo = utils.keep_ND(seqinfo, '3D', seq_regex)
 
     # here is a example of ImageType for all images for 1 sequence :
     # "ImageType": ["ORIGINAL", "PRIMARY", "M", "ND", "NORM"], <--- inv1
@@ -44,7 +39,7 @@ def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
     descr_regex_list = ['.*_INV1$', '.*_INV2$', '.*_T1_Images$', '.*_UNI_Images$']
     suffix_list      = ['MP2RAGE' ,  'MP2RAGE', 'T1map'        , 'UNIT1'         ]
     for descr_regex in descr_regex_list:
-        seq_suffix = utils.slice_with_seriesdescription(seqinfo, descr_regex)
+        seq_suffix = utils.slice_with_genericfield(seqinfo, 'SeriesDescription', descr_regex)
         for _, desc_grp in seq_suffix.groupby('SeriesDescription'):
             run_idx = 0
             for _, ser_grp in desc_grp.groupby('SeriesNumber'):
@@ -83,20 +78,15 @@ def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
 
 ########################################################################################################################
 def prog_tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
-    if seqinfo.empty:                                           # just to run the code faster
+    seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
+    if seqinfo.empty:  # just to run the code faster
         return
 
     # keep 3D
-    seqinfo_3D = utils.slice_with_mracquistiontype(seqinfo, '3D')
-    seqinfo_bad = seqinfo.drop(seqinfo_3D.index)
-    for _, seq in seqinfo_bad.iterrows():
-        vol                   = seq['Volume']
-        vol.reason_not_ready  = f"non-3D acquisition with PulseSequenceDetails = {seq_regex}"
-    seqinfo = seqinfo_3D
+    seqinfo = utils.keep_ND(seqinfo, '3D', seq_regex)
 
-    seqinfo_T2w   = utils.slice_with_seqvariant(seqinfo, '.spcR?_')
-    seqinfo_FLAIR = utils.slice_with_seqvariant(seqinfo, '.spcirR?_')
+    seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.spcR?_'  )
+    seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.spcirR?_')
 
     for _, desc_grp in seqinfo_T2w.groupby('SeriesDescription'):
         desc_grp['ImageType'] = desc_grp['ImageType'].apply(lambda x: '_'.join(x))
@@ -137,17 +127,12 @@ def prog_tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
 
 ########################################################################################################################
 def prog_diff(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
-    if seqinfo.empty:                                           # just to run the code faster
+    seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
+    if seqinfo.empty:  # just to run the code faster
         return
 
     # keep 2D
-    seqinfo_2D = utils.slice_with_mracquistiontype(seqinfo, '2D')
-    seqinfo_bad = seqinfo.drop(seqinfo_2D.index)
-    for _, seq in seqinfo_bad.iterrows():
-        vol                   = seq['Volume']
-        vol.reason_not_ready  = f"non-2D acquisition with PulseSequenceDetails = {seq_regex}"
-    seqinfo = seqinfo_2D
+    seqinfo = utils.keep_ND(seqinfo, '2D', seq_regex)
 
     # keep ORIGINAL images, discard ADC, FA, ColFA, ...
     seqinfo_original = utils.slice_with_imagetype_original(seqinfo)
@@ -159,7 +144,7 @@ def prog_diff(df: pandas.DataFrame, seq_regex: str) -> None:
 
     # in case of multiband sequence, SBRef images may be generated
     # therefore, we need to deal with them beforehand
-    seqinfo_sbref = utils.slice_with_seriesdescription(seqinfo, '.*_SBRef$')
+    seqinfo_sbref = utils.slice_with_genericfield(seqinfo, 'SeriesDescription', '.*_SBRef$')
     for _, desc_grp in seqinfo_sbref.groupby('SeriesDescription'):
         run_idx = 0
         for _, dir_grp in desc_grp.groupby('PhaseEncodingDirection'):
@@ -214,14 +199,16 @@ def prog_diff(df: pandas.DataFrame, seq_regex: str) -> None:
 
 ########################################################################################################################
 def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
-    if seqinfo.empty:                                           # just to run the code faster
+    seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
+    if seqinfo.empty:  # just to run the code faster
         return
-    seqinfo = utils.slice_with_mracquistiontype(seqinfo, '2D')  # keep 2D images
+
+    # keep 2D
+    seqinfo = utils.keep_ND(seqinfo, '2D', seq_regex)
 
     # in case of multiband sequence, SBRef images may be generated
     # therefore, we need to deal with them beforehand
-    seqinfo_sbref = utils.slice_with_seriesdescription(seqinfo, '.*_SBRef$')
+    seqinfo_sbref = utils.slice_with_genericfield(seqinfo, 'SeriesDescription', '.*_SBRef$')
     for _, desc_grp in seqinfo_sbref.groupby('SeriesDescription'):
         run_idx = 0
         for _, dir_grp in desc_grp.groupby('PhaseEncodingDirection'):
@@ -235,7 +222,7 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
                     vol.suffix             = 'sbref'
                     vol.sub                = utils.clean_name(seq['PatientName'])
                     vol.bidsfields['task'] = utils.clean_name(seq['ProtocolName'])
-                    vol.bidsfields['dir'] = direction
+                    vol.bidsfields['dir']  = direction
                     vol.bidsfields['run']  = run_idx
                     if 'EchoNumber' in seq and not pandas.isna(seq['EchoNumber']):
                         vol.bidsfields['echo'] = int(seq['EchoNumber'])
@@ -294,17 +281,12 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
 
 ########################################################################################################################
 def prog_fmap(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
-    if seqinfo.empty:                                           # just to run the code faster
+    seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
+    if seqinfo.empty:  # just to run the code faster
         return
 
     # keep 2D
-    seqinfo_2D = utils.slice_with_mracquistiontype(seqinfo, '2D')
-    seqinfo_bad = seqinfo.drop(seqinfo_2D.index)
-    for _, seq in seqinfo_bad.iterrows():
-        vol                   = seq['Volume']
-        vol.reason_not_ready  = f"non-2D acquisition with PulseSequenceDetails = {seq_regex}"
-    seqinfo = seqinfo_2D
+    seqinfo = utils.keep_ND(seqinfo, '2D', seq_regex)
 
     # separate magnitude & phase images
 
@@ -339,8 +321,8 @@ def prog_fmap(df: pandas.DataFrame, seq_regex: str) -> None:
 
 ########################################################################################################################
 def prog_gre(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_seqname(df, seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty:                                  # just to run the code faster
+    seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
+    if seqinfo.empty:  # just to run the code faster
         return
 
     # separate magnitude & phase images
@@ -388,12 +370,12 @@ def prog_gre(df: pandas.DataFrame, seq_regex: str) -> None:
 
 ########################################################################################################################
 def prog_tse(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_seqname(df, seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty:                                  # just to run the code faster
+    seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
+    if seqinfo.empty:  # just to run the code faster
         return
 
-    seqinfo_T2w   = utils.slice_with_seqvariant(seqinfo, '_tse')
-    seqinfo_FLAIR = utils.slice_with_seqvariant(seqinfo, '_tir')
+    seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'SequenceName', '_tse')
+    seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'SequenceName', '_tir')
 
     for _, desc_grp in seqinfo_T2w.groupby('SeriesDescription'):
         run_idx = 0
@@ -422,17 +404,12 @@ def prog_tse(df: pandas.DataFrame, seq_regex: str) -> None:
 
 ########################################################################################################################
 def prog_ep2d_se(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_seqname(df, seq_regex)           # get list of corresponding sequence
-    if seqinfo.empty:                                           # just to run the code faster
+    seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
+    if seqinfo.empty:  # just to run the code faster
         return
 
     # keep 2D
-    seqinfo_2D = utils.slice_with_mracquistiontype(seqinfo, '2D')
-    seqinfo_bad = seqinfo.drop(seqinfo_2D.index)
-    for _, seq in seqinfo_bad.iterrows():
-        vol                   = seq['Volume']
-        vol.reason_not_ready  = f"non-2D acquisition with PulseSequenceDetails = {seq_regex}"
-    seqinfo = seqinfo_2D
+    seqinfo = utils.keep_ND(seqinfo, '2D', seq_regex)
 
     for _, desc_grp in seqinfo.groupby('SeriesDescription'):
         run_idx = 0
@@ -453,8 +430,8 @@ def prog_ep2d_se(df: pandas.DataFrame, seq_regex: str) -> None:
 
 ########################################################################################################################
 def prog_discard(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_seqname(df, seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty:                                  # just to run the code faster
+    seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
+    if seqinfo.empty:  # just to run the code faster
         return
 
     for _, desc_grp in seqinfo.groupby('SeriesDescription'):
@@ -502,10 +479,10 @@ def run(volume_list: List[Volume], config: list) -> None:
     df_by_subject = df.groupby('PatientName')
 
     # call each routine depending on the sequence name
-    for name, group in df_by_subject:               # loop over subjects
+    for name, group in df_by_subject:       # loop over subjects
         for seq_regex, fcn_name in config:  # loop over sequence decision tree
-            func = eval(fcn_name)   # fetch the name of the function to call dynamically
-            func(group, seq_regex)  # execute the function
+            func = eval(fcn_name)   # fetch the name of the prog_ to call dynamically
+            func(group, seq_regex)  # execute the prog_
 
     # deal with unknown sequences
     for _, desc_grp in df.groupby('SeriesDescription'):
