@@ -317,8 +317,8 @@ def apply_bids_architecture(out_dir: str, volume_list: List[Volume], symlink_or_
         log.warning(msg)
     for msg in log_warning:
         log.warning(msg)
-    for msg in log_info_discard:
-        log.info(msg)
+    # for msg in log_info_discard:
+    #     log.info(msg)
     for msg in log_info:
         log.info(msg)
 

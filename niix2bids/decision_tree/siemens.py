@@ -63,16 +63,22 @@ def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
 
     # now that we have dealt with the mp2rage@siemens suffix, we can continue
     for _, desc_grp in seqinfo.groupby('SeriesDescription'):
-        run_idx = 0
-        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
-            run_idx += 1
-            for row_idx, seq in ser_grp.iterrows():
-                vol                   = seq['Volume']
-                vol.tag               = 'anat'
-                vol.suffix            = 'T1w'
-                vol.sub               = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                vol.bidsfields['run'] = run_idx
+        desc_grp['ImageType'] = desc_grp['ImageType'].apply(lambda x: '_'.join(x))
+        for _, imgtyp_grp in desc_grp.groupby('ImageType'):  # this part will group&build the rec-* field
+            image_type = imgtyp_grp['ImageType'].iloc[0]  # take the first one, they are identical
+            image_type_list = image_type.split('_')
+            image_type_useful_str = ''.join(image_type_list[3:])  # the first 3 items are discarded, the rest is concat
+            run_idx = 0
+            for _, ser_grp in imgtyp_grp.groupby('SeriesNumber'):
+                run_idx += 1
+                for row_idx, seq in ser_grp.iterrows():
+                    vol                   = seq['Volume']
+                    vol.tag               = 'anat'
+                    vol.suffix            = 'T1w'
+                    vol.sub               = utils.clean_name(seq['PatientName'])
+                    vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+                    vol.bidsfields['rec'] = image_type_useful_str
+                    vol.bidsfields['run'] = run_idx
 
 
 ########################################################################################################################
@@ -93,28 +99,40 @@ def prog_tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo_FLAIR = utils.slice_with_seqvariant(seqinfo, '.spcirR?_')
 
     for _, desc_grp in seqinfo_T2w.groupby('SeriesDescription'):
-        run_idx = 0
-        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
-            run_idx += 1
-            for row_idx, seq in ser_grp.iterrows():
-                vol                   = seq['Volume']
-                vol.tag               = 'anat'
-                vol.suffix            = 'T2w'
-                vol.sub               = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                vol.bidsfields['run'] = run_idx
+        desc_grp['ImageType'] = desc_grp['ImageType'].apply(lambda x: '_'.join(x))
+        for _, imgtyp_grp in desc_grp.groupby('ImageType'):  # this part will group&build the rec-* field
+            image_type = imgtyp_grp['ImageType'].iloc[0]  # take the first one, they are identical
+            image_type_list = image_type.split('_')
+            image_type_useful_str = ''.join(image_type_list[3:])  # the first 3 items are discarded, the rest is concat
+            run_idx = 0
+            for _, ser_grp in imgtyp_grp.groupby('SeriesNumber'):
+                run_idx += 1
+                for row_idx, seq in ser_grp.iterrows():
+                    vol                   = seq['Volume']
+                    vol.tag               = 'anat'
+                    vol.suffix            = 'T2w'
+                    vol.sub               = utils.clean_name(seq['PatientName'])
+                    vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+                    vol.bidsfields['rec'] = image_type_useful_str
+                    vol.bidsfields['run'] = run_idx
 
     for _, desc_grp in seqinfo_FLAIR.groupby('SeriesDescription'):
-        run_idx = 0
-        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
-            run_idx += 1
-            for row_idx, seq in ser_grp.iterrows():
-                vol                   = seq['Volume']
-                vol.tag               = 'anat'
-                vol.suffix            = 'FLAIR'
-                vol.sub               = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                vol.bidsfields['run'] = run_idx
+        desc_grp['ImageType'] = desc_grp['ImageType'].apply(lambda x: '_'.join(x))
+        for _, imgtyp_grp in desc_grp.groupby('ImageType'):  # this part will group&build the rec-* field
+            image_type = imgtyp_grp['ImageType'].iloc[0]  # take the first one, they are identical
+            image_type_list = image_type.split('_')
+            image_type_useful_str = ''.join(image_type_list[3:])  # the first 3 items are discarded, the rest is concat
+            run_idx = 0
+            for _, ser_grp in imgtyp_grp.groupby('SeriesNumber'):
+                run_idx += 1
+                for row_idx, seq in ser_grp.iterrows():
+                    vol                   = seq['Volume']
+                    vol.tag               = 'anat'
+                    vol.suffix            = 'FLAIR'
+                    vol.sub               = utils.clean_name(seq['PatientName'])
+                    vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+                    vol.bidsfields['rec'] = image_type_useful_str
+                    vol.bidsfields['run'] = run_idx
 
 
 ########################################################################################################################
