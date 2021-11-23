@@ -237,7 +237,7 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
                     vol.bidsfields['task'] = utils.clean_name(seq['ProtocolName'])
                     vol.bidsfields['dir'] = direction
                     vol.bidsfields['run']  = run_idx
-                    if not pandas.isna(seq['EchoNumber']):
+                    if 'EchoNumber' in seq and not pandas.isna(seq['EchoNumber']):
                         vol.bidsfields['echo'] = int(seq['EchoNumber'])
                     seqinfo = seqinfo.drop(row_idx)
 
@@ -268,7 +268,7 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
                     vol.bidsfields['task'] = utils.clean_name(seq['ProtocolName'])
                     vol.bidsfields['dir']  = direction
                     vol.bidsfields['run']  = run_idx
-                    if not pandas.isna(seq['EchoNumber']):
+                    if 'EchoNumber' in seq and not pandas.isna(seq['EchoNumber']):
                         vol.bidsfields['echo'] = int(seq['EchoNumber'])
 
     # phase
@@ -288,7 +288,7 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
                     vol.bidsfields['task'] = utils.clean_name(seq['ProtocolName'])
                     vol.bidsfields['dir']  = direction
                     vol.bidsfields['run']  = run_idx
-                    if not pandas.isna(seq['EchoNumber']):
+                    if 'EchoNumber' in seq and not pandas.isna(seq['EchoNumber']):
                         vol.bidsfields['echo'] = int(seq['EchoNumber'])
 
 
