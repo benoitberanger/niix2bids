@@ -18,7 +18,7 @@ def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
         return
 
     # keep 3D
-    seqinfo = utils.keep_ND(seqinfo, '3D', seq_regex)
+    seqinfo = utils.keep_ndim(seqinfo, '3D', seq_regex)
 
     # here is a example of ImageType for all images for 1 sequence :
     # "ImageType": ["ORIGINAL", "PRIMARY", "M", "ND", "NORM"], <--- inv1
@@ -51,7 +51,7 @@ def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
                     vol.sub               = utils.clean_name(seq['PatientName'])
                     vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                     vol.bidsfields['run'] = run_idx
-                    if vol.suffix            == 'MP2RAGE':
+                    if vol.suffix == 'MP2RAGE':
                         # _inv-<index>[_part-<label>]_MP2RAGE.nii
                         vol.bidsfields['inv'] = descr_regex_list.index(descr_regex) + 1
                     seqinfo = seqinfo.drop(row_idx)
@@ -83,7 +83,7 @@ def prog_tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
         return
 
     # keep 3D
-    seqinfo = utils.keep_ND(seqinfo, '3D', seq_regex)
+    seqinfo = utils.keep_ndim(seqinfo, '3D', seq_regex)
 
     seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.spcR?_'  )
     seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.spcirR?_')
@@ -132,7 +132,7 @@ def prog_diff(df: pandas.DataFrame, seq_regex: str) -> None:
         return
 
     # keep 2D
-    seqinfo = utils.keep_ND(seqinfo, '2D', seq_regex)
+    seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
 
     # keep ORIGINAL images, discard ADC, FA, ColFA, ...
     seqinfo_original = utils.slice_with_imagetype_original(seqinfo)
@@ -202,31 +202,51 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
     if seqinfo.empty:  # just to run the code faster
         return
+    sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
 
     # keep 2D
-    seqinfo = utils.keep_ND(seqinfo, '2D', seq_regex)
+    seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
 
+    # ------------------------------------------------------------------------------------------------------------------
     # in case of multiband sequence, SBRef images may be generated
     # therefore, we need to deal with them beforehand
     seqinfo_sbref = utils.slice_with_genericfield(seqinfo, 'SeriesDescription', '.*_SBRef$')
-    for _, desc_grp in seqinfo_sbref.groupby('SeriesDescription'):
+
+    # build groups of parameters
+    columns = ['SeriesDescription', 'PhaseEncodingDirection']
+    has_EchoNumber = 'EchoNumber' in seqinfo_sbref.columns
+    if has_EchoNumber:
+        columns.append('EchoNumber')
+        seqinfo = utils.fill_echonumber(seqinfo)
+    groups = seqinfo_sbref.groupby(columns)
+
+    # loop over groups
+    for grp_name, series in groups:
+
+        first_run = series.iloc[0]  # they are all the same (except run number), so take the first one
+
+        task = utils.clean_name(first_run['ProtocolName'])
+        dir  = utils.get_phase_encoding_direction(first_run['PhaseEncodingDirection'])
+        if has_EchoNumber:
+            echo = int(first_run['EchoNumber'])
+            if echo == -1:
+                has_EchoNumber = False
+        suffix = 'sbref'
+
+        # loop over runs
         run_idx = 0
-        for _, dir_grp in desc_grp.groupby('PhaseEncodingDirection'):
-            direction = dir_grp['PhaseEncodingDirection'].iloc(0)[0]  # just get first element, they are identical
-            direction = utils.get_phase_encoding_direction(direction)
-            for _, ser_grp in dir_grp.groupby('SeriesNumber'):
-                run_idx += 1
-                for row_idx, seq in ser_grp.iterrows():
-                    vol                    = seq['Volume']
-                    vol.tag                = 'func'
-                    vol.suffix             = 'sbref'
-                    vol.sub                = utils.clean_name(seq['PatientName'])
-                    vol.bidsfields['task'] = utils.clean_name(seq['ProtocolName'])
-                    vol.bidsfields['dir']  = direction
-                    vol.bidsfields['run']  = run_idx
-                    if 'EchoNumber' in seq and not pandas.isna(seq['EchoNumber']):
-                        vol.bidsfields['echo'] = int(seq['EchoNumber'])
-                    seqinfo = seqinfo.drop(row_idx)
+        for row_idx, seq in series.iterrows():
+            run_idx += 1
+            vol                    = seq['Volume']
+            vol.tag                = 'func'
+            vol.suffix             = suffix
+            vol.sub                = sub
+            vol.bidsfields['task'] = task
+            vol.bidsfields['dir']  = dir
+            vol.bidsfields['run']  = run_idx
+            if has_EchoNumber:
+                vol.bidsfields['echo']  = echo
+            seqinfo = seqinfo.drop(row_idx)
 
     # only keep 4D data
     # ex : 1 volume can be acquired quickly to check subject position over time, so discard it, its not "BOLD"
@@ -236,47 +256,45 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
             seq['Volume'].reason_not_ready = 'non-4D bold volume'
             seqinfo = seqinfo.drop(row_idx)
 
-    # separate magnitude & phase images
+    # ------------------------------------------------------------------------------------------------------------------
+    # now that we already parsed SBRef and eliminated non-4D volumes, we can continue with the "normal" bold volumes
 
-    # magnitude
-    seqinfo_mag = utils.slice_with_imagetype(seqinfo, 'M')
-    for _, desc_grp in seqinfo_mag.groupby('SeriesDescription'):
-        run_idx = 0
-        for _, dir_grp in desc_grp.groupby('PhaseEncodingDirection'):
-            direction = dir_grp['PhaseEncodingDirection'].iloc(0)[0]  # just get first element, they are identical
-            direction = utils.get_phase_encoding_direction(direction)
-            for _, ser_grp in dir_grp.groupby('SeriesNumber'):
-                run_idx += 1
-                for row_idx, seq in ser_grp.iterrows():
-                    vol                    = seq['Volume']
-                    vol.tag                = 'func'
-                    vol.suffix             = 'bold'
-                    vol.sub                = utils.clean_name(seq['PatientName'])
-                    vol.bidsfields['task'] = utils.clean_name(seq['ProtocolName'])
-                    vol.bidsfields['dir']  = direction
-                    vol.bidsfields['run']  = run_idx
-                    if 'EchoNumber' in seq and not pandas.isna(seq['EchoNumber']):
-                        vol.bidsfields['echo'] = int(seq['EchoNumber'])
+    # build groups of parameters
+    columns = ['SeriesDescription', 'PhaseEncodingDirection']
+    has_EchoNumber = 'EchoNumber' in seqinfo.columns
+    if has_EchoNumber:
+        columns.append('EchoNumber')
+        seqinfo = utils.fill_echonumber(seqinfo)
+    groups = seqinfo.groupby(columns)
 
-    # phase
-    seqinfo_pha = utils.slice_with_imagetype(seqinfo, 'P')
-    for _, desc_grp in seqinfo_pha.groupby('SeriesDescription'):
+    # loop over groups
+    for grp_name, series in groups:
+
+        first_run = series.iloc[0]  # they are all the same (except run number), so take the first one
+
+        task = utils.clean_name(first_run['ProtocolName'])
+        dir  = utils.get_phase_encoding_direction(first_run['PhaseEncodingDirection'])
+        if has_EchoNumber:
+            echo = int(first_run['EchoNumber'])
+            if echo == -1:
+                has_EchoNumber = False
+        suffix = utils.get_mag_or_pha(first_run)
+
+        # loop over runs
         run_idx = 0
-        for _, dir_grp in desc_grp.groupby('PhaseEncodingDirection'):
-            direction = dir_grp['PhaseEncodingDirection'].iloc(0)[0]  # just get first element, they are identical
-            direction = utils.get_phase_encoding_direction(direction)
-            for _, ser_grp in dir_grp.groupby('SeriesNumber'):
-                run_idx += 1
-                for row_idx, seq in ser_grp.iterrows():
-                    vol                    = seq['Volume']
-                    vol.tag                = 'func'
-                    vol.suffix             = 'phase'
-                    vol.sub                = utils.clean_name(seq['PatientName'])
-                    vol.bidsfields['task'] = utils.clean_name(seq['ProtocolName'])
-                    vol.bidsfields['dir']  = direction
-                    vol.bidsfields['run']  = run_idx
-                    if 'EchoNumber' in seq and not pandas.isna(seq['EchoNumber']):
-                        vol.bidsfields['echo'] = int(seq['EchoNumber'])
+        for _, seq in series.iterrows():
+            run_idx += 1
+            vol                    = seq['Volume']
+            vol.tag                = 'func'
+            vol.suffix             = suffix
+            vol.sub                = sub
+            vol.bidsfields['task'] = task
+            vol.bidsfields['dir']  = dir
+            vol.bidsfields['run']  = run_idx
+            if has_EchoNumber:
+                vol.bidsfields['echo']  = echo
+            if not bool(suffix):
+                vol.reason_not_ready = f'unrecognized ImageType, expected M or P => {first_run["ImageTypeStr"]} : {first_run["Volume"].nii.path}'
 
 
 ########################################################################################################################
@@ -286,7 +304,7 @@ def prog_fmap(df: pandas.DataFrame, seq_regex: str) -> None:
         return
 
     # keep 2D
-    seqinfo = utils.keep_ND(seqinfo, '2D', seq_regex)
+    seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
 
     # separate magnitude & phase images
 
@@ -409,7 +427,7 @@ def prog_ep2d_se(df: pandas.DataFrame, seq_regex: str) -> None:
         return
 
     # keep 2D
-    seqinfo = utils.keep_ND(seqinfo, '2D', seq_regex)
+    seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
 
     for _, desc_grp in seqinfo.groupby('SeriesDescription'):
         run_idx = 0
@@ -472,8 +490,12 @@ def run(volume_list: List[Volume], config: list) -> None:
     utils.assert_key_val(df, "Manufacturer", "Siemens")
 
     # make some extraction / conversion
+
     # %CustomerSeq%_cmrr_mbep2d_bold -> cmrr_mbep2d_bold
     df['PulseSequenceDetails'] = df['PulseSequenceDetails'].apply(lambda s: s.rsplit("%_")[1])
+
+    # [ORIGINAL, PRIMARY, M, ND, MOSAIC] -> ORIGINAL_PRIMARY_M_ND_MOSAIC
+    df['ImageTypeStr'] = df['ImageType'].apply(lambda s: '_'.join(s))
 
     # subject by subject sequence group
     df_by_subject = df.groupby('PatientName')

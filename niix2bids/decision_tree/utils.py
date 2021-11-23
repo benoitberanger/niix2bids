@@ -126,10 +126,30 @@ def get_phase_encoding_direction(input_str: str) -> str:
 
 
 ########################################################################################################################
-def keep_ND(df: pandas.DataFrame, dim: str, seq_regex: str) -> pandas.DataFrame:
-    df_ND = slice_with_genericfield(df, 'MRAcquisitionType', dim)
+def keep_ndim(df: pandas.DataFrame, ndim: str, seq_regex: str) -> pandas.DataFrame:
+    df_ND = slice_with_genericfield(df, 'MRAcquisitionType', ndim)
     df_bad = df.drop(df_ND.index)
     for _, seq in df_bad.iterrows():
         vol                   = seq['Volume']
-        vol.reason_not_ready  = f"non-{dim} acquisition with PulseSequenceDetails = {seq_regex}"
+        vol.reason_not_ready  = f"non-{ndim} acquisition with PulseSequenceDetails = {seq_regex}"
     return df_ND
+
+
+########################################################################################################################
+def fill_echonumber(df: pandas.DataFrame, value: int = -1) -> pandas.DataFrame:
+    nan_in_EchoNumber = pandas.isna(df['EchoNumber'])
+    if any(nan_in_EchoNumber):
+        df['EchoNumber'] = df['EchoNumber'].fillna(value)  # DataFrame CANNOT iterate overs groups with nan
+    return df
+
+
+########################################################################################################################
+def get_mag_or_pha(df: pandas.DataFrame) -> str:
+    mag_or_pha = df["ImageTypeStr"].split('_')[2]
+    if mag_or_pha == 'M':
+        suffix = 'bold'
+    elif mag_or_pha == 'P':
+        suffix = 'phase'
+    else:
+        suffix = ''
+    return suffix
