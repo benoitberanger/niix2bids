@@ -14,8 +14,7 @@ from niix2bids.utils import get_logger
 ########################################################################################################################
 def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty:  # just to run the code faster
-        return
+    if seqinfo.empty: return  # just to run the code faster
 
     # keep 3D
     seqinfo = utils.keep_ndim(seqinfo, '3D', seq_regex)
@@ -79,8 +78,7 @@ def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
 ########################################################################################################################
 def prog_tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty:  # just to run the code faster
-        return
+    if seqinfo.empty: return  # just to run the code faster
 
     # keep 3D
     seqinfo = utils.keep_ndim(seqinfo, '3D', seq_regex)
@@ -128,8 +126,7 @@ def prog_tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
 ########################################################################################################################
 def prog_diff(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty:  # just to run the code faster
-        return
+    if seqinfo.empty: return  # just to run the code faster
 
     # keep 2D
     seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
@@ -200,11 +197,10 @@ def prog_diff(df: pandas.DataFrame, seq_regex: str) -> None:
 ########################################################################################################################
 def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty:  # just to run the code faster
-        return
+    if seqinfo.empty: return  # just to run the code faster
     sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
 
-    # keep 2D
+    # keep 2D acquistion type
     seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -213,25 +209,19 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo_sbref = utils.slice_with_genericfield(seqinfo, 'SeriesDescription', '.*_SBRef$')
 
     # build groups of parameters
-    columns = ['SeriesDescription', 'PhaseEncodingDirection']
-    has_EchoNumber = 'EchoNumber' in seqinfo_sbref.columns
-    if has_EchoNumber:
-        columns.append('EchoNumber')
-        seqinfo = utils.fill_echonumber(seqinfo)
+    columns = ['SeriesDescription', 'PhaseEncodingDirection', 'ImageTypeStr']
+    columns, seqinfo_sbref, has_EchoNumber = utils.complete_columns_with_echonumber(columns, seqinfo)
     groups = seqinfo_sbref.groupby(columns)
 
     # loop over groups
     for grp_name, series in groups:
 
-        first_run = series.iloc[0]  # they are all the same (except run number), so take the first one
+        first_serie = series.iloc[0]  # they are all the same (except run number), so take the first one
 
-        task = utils.clean_name(first_run['ProtocolName'])
-        dir  = utils.get_phase_encoding_direction(first_run['PhaseEncodingDirection'])
-        if has_EchoNumber:
-            echo = int(first_run['EchoNumber'])
-            if echo == -1:
-                has_EchoNumber = False
-        suffix = 'sbref'
+        task = utils.clean_name(first_serie['ProtocolName'])
+        dir  = utils.get_phase_encoding_direction(first_serie['PhaseEncodingDirection'])
+        echo = utils.get_echo_number(first_serie, has_EchoNumber)
+        part = utils.get_mag_or_pha(first_serie)
 
         # loop over runs
         run_idx = 0
@@ -239,14 +229,17 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
             run_idx += 1
             vol                    = seq['Volume']
             vol.tag                = 'func'
-            vol.suffix             = suffix
+            vol.suffix             = 'sbref'
             vol.sub                = sub
             vol.bidsfields['task'] = task
             vol.bidsfields['dir']  = dir
             vol.bidsfields['run']  = run_idx
-            if has_EchoNumber:
-                vol.bidsfields['echo']  = echo
-            seqinfo = seqinfo.drop(row_idx)
+            if echo > 0 : vol.bidsfields['echo']  = echo
+            if bool(part):
+                vol.bidsfields['part']  = part
+            else:
+                vol.reason_not_ready = f'unrecognized ImageType, expected M or P => {first_serie["ImageTypeStr"]} : {first_serie["Volume"].nii.path}'
+            seqinfo = seqinfo.drop(row_idx)  ## !! important : drop series that we flagged as SBRef !!
 
     # only keep 4D data
     # ex : 1 volume can be acquired quickly to check subject position over time, so discard it, its not "BOLD"
@@ -260,25 +253,19 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
     # now that we already parsed SBRef and eliminated non-4D volumes, we can continue with the "normal" bold volumes
 
     # build groups of parameters
-    columns = ['SeriesDescription', 'PhaseEncodingDirection']
-    has_EchoNumber = 'EchoNumber' in seqinfo.columns
-    if has_EchoNumber:
-        columns.append('EchoNumber')
-        seqinfo = utils.fill_echonumber(seqinfo)
+    columns = ['SeriesDescription', 'PhaseEncodingDirection', 'ImageTypeStr']
+    columns, seqinfo, has_EchoNumber = utils.complete_columns_with_echonumber(columns, seqinfo)
     groups = seqinfo.groupby(columns)
 
     # loop over groups
     for grp_name, series in groups:
 
-        first_run = series.iloc[0]  # they are all the same (except run number), so take the first one
+        first_serie = series.iloc[0]  # they are all the same (except run number), so take the first one
 
-        task = utils.clean_name(first_run['ProtocolName'])
-        dir  = utils.get_phase_encoding_direction(first_run['PhaseEncodingDirection'])
-        if has_EchoNumber:
-            echo = int(first_run['EchoNumber'])
-            if echo == -1:
-                has_EchoNumber = False
-        suffix = utils.get_mag_or_pha(first_run)
+        task = utils.clean_name(first_serie['ProtocolName'])
+        dir  = utils.get_phase_encoding_direction(first_serie['PhaseEncodingDirection'])
+        echo = utils.get_echo_number(first_serie, has_EchoNumber)
+        part = utils.get_mag_or_pha(first_serie)
 
         # loop over runs
         run_idx = 0
@@ -286,22 +273,22 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
             run_idx += 1
             vol                    = seq['Volume']
             vol.tag                = 'func'
-            vol.suffix             = suffix
+            vol.suffix             = 'bold'
             vol.sub                = sub
             vol.bidsfields['task'] = task
             vol.bidsfields['dir']  = dir
             vol.bidsfields['run']  = run_idx
-            if has_EchoNumber:
-                vol.bidsfields['echo']  = echo
-            if not bool(suffix):
-                vol.reason_not_ready = f'unrecognized ImageType, expected M or P => {first_run["ImageTypeStr"]} : {first_run["Volume"].nii.path}'
+            if echo > 0 : vol.bidsfields['echo']  = echo
+            if bool(part):
+                vol.bidsfields['part']  = part
+            else:
+                vol.reason_not_ready = f'unrecognized ImageType, expected M or P => {first_serie["ImageTypeStr"]} : {first_serie["Volume"].nii.path}'
 
 
 ########################################################################################################################
 def prog_fmap(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty:  # just to run the code faster
-        return
+    if seqinfo.empty: return  # just to run the code faster
 
     # keep 2D
     seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
@@ -340,8 +327,7 @@ def prog_fmap(df: pandas.DataFrame, seq_regex: str) -> None:
 ########################################################################################################################
 def prog_gre(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty:  # just to run the code faster
-        return
+    if seqinfo.empty: return  # just to run the code faster
 
     # separate magnitude & phase images
 
@@ -389,8 +375,7 @@ def prog_gre(df: pandas.DataFrame, seq_regex: str) -> None:
 ########################################################################################################################
 def prog_tse(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty:  # just to run the code faster
-        return
+    if seqinfo.empty: return  # just to run the code faster
 
     seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'SequenceName', '_tse')
     seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'SequenceName', '_tir')
@@ -423,8 +408,7 @@ def prog_tse(df: pandas.DataFrame, seq_regex: str) -> None:
 ########################################################################################################################
 def prog_ep2d_se(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty:  # just to run the code faster
-        return
+    if seqinfo.empty: return  # just to run the code faster
 
     # keep 2D
     seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
@@ -449,8 +433,7 @@ def prog_ep2d_se(df: pandas.DataFrame, seq_regex: str) -> None:
 ########################################################################################################################
 def prog_discard(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty:  # just to run the code faster
-        return
+    if seqinfo.empty: return  # just to run the code faster
 
     for _, desc_grp in seqinfo.groupby('SeriesDescription'):
         run_idx = 0

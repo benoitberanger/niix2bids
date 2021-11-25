@@ -137,9 +137,13 @@ def keep_ndim(df: pandas.DataFrame, ndim: str, seq_regex: str) -> pandas.DataFra
 
 ########################################################################################################################
 def fill_echonumber(df: pandas.DataFrame, value: int = -1) -> pandas.DataFrame:
+    """
+    DataFrame CANNOT iterate overs groups with nan.
+    So here is a workaround, replace NaN with -1
+    """
     nan_in_EchoNumber = pandas.isna(df['EchoNumber'])
     if any(nan_in_EchoNumber):
-        df['EchoNumber'] = df['EchoNumber'].fillna(value)  # DataFrame CANNOT iterate overs groups with nan
+        df['EchoNumber'] = df['EchoNumber'].fillna(value)
     return df
 
 
@@ -147,9 +151,27 @@ def fill_echonumber(df: pandas.DataFrame, value: int = -1) -> pandas.DataFrame:
 def get_mag_or_pha(df: pandas.DataFrame) -> str:
     mag_or_pha = df["ImageTypeStr"].split('_')[2]
     if mag_or_pha == 'M':
-        suffix = 'bold'
+        suffix = 'mag'
     elif mag_or_pha == 'P':
         suffix = 'phase'
     else:
         suffix = ''
     return suffix
+
+
+########################################################################################################################
+def get_echo_number(df: pandas.DataFrame, has_EchoNumber: bool) -> int:
+    if has_EchoNumber:
+        echo = int(df['EchoNumber'])
+    else:
+        echo = -1
+    return echo
+
+
+########################################################################################################################
+def complete_columns_with_echonumber(columns: list, df: pandas.DataFrame) -> [list, pandas.DataFrame, bool] :
+    has_EchoNumber = 'EchoNumber' in df.columns
+    if has_EchoNumber:
+        columns.append('EchoNumber')
+        df = fill_echonumber(df)
+    return columns, df, has_EchoNumber
