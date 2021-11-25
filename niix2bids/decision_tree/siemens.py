@@ -20,6 +20,7 @@ def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
     # keep 3D
     seqinfo = utils.keep_ndim(seqinfo, '3D', seq_regex)
 
+    # ------------------------------------------------------------------------------------------------------------------
     # here is a example of ImageType for all images for 1 sequence :
     # "ImageType": ["ORIGINAL", "PRIMARY", "M", "ND", "NORM"], <--- inv1
     # "ImageType": ["ORIGINAL", "PRIMARY", "M", "ND", "NORM"], <--- inv2
@@ -72,6 +73,7 @@ def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
                 if bool(inv): vol.bidsfields['inv'] = inv
                 seqinfo = seqinfo.drop(row_idx)  ## !! important : drop series that we already flagged !!
 
+    # ------------------------------------------------------------------------------------------------------------------
     # now that we have dealt with the mp2rage@siemens suffix, we can continue
 
     # build groups of parameters
@@ -103,6 +105,7 @@ def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
 def prog_tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
     if seqinfo.empty: return  # just to run the code faster
+    sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
 
     # keep 3D
     seqinfo = utils.keep_ndim(seqinfo, '3D', seq_regex)
@@ -110,47 +113,66 @@ def prog_tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.spcR?_'  )
     seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.spcirR?_')
 
-    for _, desc_grp in seqinfo_T2w.groupby('SeriesDescription'):
-        desc_grp['ImageType'] = desc_grp['ImageType'].apply(lambda x: '_'.join(x))
-        for _, imgtyp_grp in desc_grp.groupby('ImageType'):  # this part will group&build the rec-* field
-            image_type = imgtyp_grp['ImageType'].iloc[0]  # take the first one, they are identical
-            image_type_list = image_type.split('_')
-            image_type_useful_str = ''.join(image_type_list[3:])  # the first 3 items are discarded, the rest is concat
-            run_idx = 0
-            for _, ser_grp in imgtyp_grp.groupby('SeriesNumber'):
-                run_idx += 1
-                for row_idx, seq in ser_grp.iterrows():
-                    vol                   = seq['Volume']
-                    vol.tag               = 'anat'
-                    vol.suffix            = 'T2w'
-                    vol.sub               = utils.clean_name(seq['PatientName'])
-                    vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                    vol.bidsfields['rec'] = image_type_useful_str
-                    vol.bidsfields['run'] = run_idx
+    # ------------------------------------------------------------------------------------------------------------------
+    # T2w
 
-    for _, desc_grp in seqinfo_FLAIR.groupby('SeriesDescription'):
-        desc_grp['ImageType'] = desc_grp['ImageType'].apply(lambda x: '_'.join(x))
-        for _, imgtyp_grp in desc_grp.groupby('ImageType'):  # this part will group&build the rec-* field
-            image_type = imgtyp_grp['ImageType'].iloc[0]  # take the first one, they are identical
-            image_type_list = image_type.split('_')
-            image_type_useful_str = ''.join(image_type_list[3:])  # the first 3 items are discarded, the rest is concat
-            run_idx = 0
-            for _, ser_grp in imgtyp_grp.groupby('SeriesNumber'):
-                run_idx += 1
-                for row_idx, seq in ser_grp.iterrows():
-                    vol                   = seq['Volume']
-                    vol.tag               = 'anat'
-                    vol.suffix            = 'FLAIR'
-                    vol.sub               = utils.clean_name(seq['PatientName'])
-                    vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                    vol.bidsfields['rec'] = image_type_useful_str
-                    vol.bidsfields['run'] = run_idx
+    # build groups of parameters
+    columns = ['SeriesDescription', 'ImageTypeStr']
+    groups = seqinfo_T2w.groupby(columns)
+
+    # loop over groups
+    for grp_name, series in groups:
+
+        first_serie = series.iloc[0]  # they are all the same (except run number), so take the first one
+
+        acq = utils.clean_name(first_serie['ProtocolName'])
+        image_type_useful = ''.join(first_serie['ImageType'][3:])
+
+        # loop over runs
+        run_idx = 0
+        for row_idx, seq in series.iterrows():
+            run_idx += 1
+            vol                   = seq['Volume']
+            vol.tag               = 'anat'
+            vol.suffix            = 'T2w'
+            vol.sub               = sub
+            vol.bidsfields['acq'] = acq
+            vol.bidsfields['rec'] = image_type_useful
+            vol.bidsfields['run'] = run_idx
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # FLAIR
+
+    # build groups of parameters
+    columns = ['SeriesDescription', 'ImageTypeStr']
+    groups = seqinfo_FLAIR.groupby(columns)
+
+    # loop over groups
+    for grp_name, series in groups:
+
+        first_serie = series.iloc[0]  # they are all the same (except run number), so take the first one
+
+        acq = utils.clean_name(first_serie['ProtocolName'])
+        image_type_useful = ''.join(first_serie['ImageType'][3:])
+
+        # loop over runs
+        run_idx = 0
+        for row_idx, seq in series.iterrows():
+            run_idx += 1
+            vol                   = seq['Volume']
+            vol.tag               = 'anat'
+            vol.suffix            = 'T1w'
+            vol.sub               = sub
+            vol.bidsfields['acq'] = acq
+            vol.bidsfields['rec'] = image_type_useful
+            vol.bidsfields['run'] = run_idx
 
 
 ########################################################################################################################
 def prog_diff(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
     if seqinfo.empty: return  # just to run the code faster
+    sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
 
     # keep 2D
     seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
@@ -313,6 +335,7 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
 def prog_fmap(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
     if seqinfo.empty: return  # just to run the code faster
+    sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
 
     # keep 2D
     seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
@@ -352,6 +375,7 @@ def prog_fmap(df: pandas.DataFrame, seq_regex: str) -> None:
 def prog_gre(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
     if seqinfo.empty: return  # just to run the code faster
+    sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
 
     # separate magnitude & phase images
 
@@ -400,39 +424,71 @@ def prog_gre(df: pandas.DataFrame, seq_regex: str) -> None:
 def prog_tse(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
     if seqinfo.empty: return  # just to run the code faster
+    sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
 
-    seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'SequenceName', '_tse')
-    seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'SequenceName', '_tir')
+    seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.*tse')
+    seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.*tir')
 
-    for _, desc_grp in seqinfo_T2w.groupby('SeriesDescription'):
+    # ------------------------------------------------------------------------------------------------------------------
+    # T2w
+
+    # build groups of parameters
+    columns = ['SeriesDescription', 'ImageTypeStr']
+    groups = seqinfo_T2w.groupby(columns)
+
+    # loop over groups
+    for grp_name, series in groups:
+
+        first_serie = series.iloc[0]  # they are all the same (except run number), so take the first one
+
+        acq = utils.clean_name(first_serie['ProtocolName'])
+        image_type_useful = ''.join(first_serie['ImageType'][3:])
+
+        # loop over runs
         run_idx = 0
-        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
+        for row_idx, seq in series.iterrows():
             run_idx += 1
-            for row_idx, seq in ser_grp.iterrows():
-                vol                   = seq['Volume']
-                vol.tag               = 'anat'
-                vol.suffix            = 'T2w'
-                vol.sub               = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                vol.bidsfields['run'] = run_idx
+            vol                   = seq['Volume']
+            vol.tag               = 'anat'
+            vol.suffix            = 'T2w'
+            vol.sub               = sub
+            vol.bidsfields['acq'] = acq
+            vol.bidsfields['rec'] = image_type_useful
+            vol.bidsfields['run'] = run_idx
 
-    for _, desc_grp in seqinfo_FLAIR.groupby('SeriesDescription'):
+    # ------------------------------------------------------------------------------------------------------------------
+    # FLAIR
+
+    # build groups of parameters
+    columns = ['SeriesDescription', 'ImageTypeStr']
+    groups = seqinfo_FLAIR.groupby(columns)
+
+    # loop over groups
+    for grp_name, series in groups:
+
+        first_serie = series.iloc[0]  # they are all the same (except run number), so take the first one
+
+        acq = utils.clean_name(first_serie['ProtocolName'])
+        image_type_useful = ''.join(first_serie['ImageType'][3:])
+
+        # loop over runs
         run_idx = 0
-        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
+        for row_idx, seq in series.iterrows():
             run_idx += 1
-            for row_idx, seq in ser_grp.iterrows():
-                vol                   = seq['Volume']
-                vol.tag               = 'anat'
-                vol.suffix            = 'FLAIR'
-                vol.sub               = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                vol.bidsfields['run'] = run_idx
+            vol                   = seq['Volume']
+            vol.tag               = 'anat'
+            vol.suffix            = 'T1w'
+            vol.sub               = sub
+            vol.bidsfields['acq'] = acq
+            vol.bidsfields['rec'] = image_type_useful
+            vol.bidsfields['run'] = run_idx
 
 
 ########################################################################################################################
 def prog_ep2d_se(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
     if seqinfo.empty: return  # just to run the code faster
+    sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
 
     # keep 2D
     seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
@@ -458,6 +514,7 @@ def prog_ep2d_se(df: pandas.DataFrame, seq_regex: str) -> None:
 def prog_discard(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
     if seqinfo.empty: return  # just to run the code faster
+    sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
 
     for _, desc_grp in seqinfo.groupby('SeriesDescription'):
         run_idx = 0
