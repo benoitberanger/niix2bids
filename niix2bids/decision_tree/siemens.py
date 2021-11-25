@@ -15,6 +15,7 @@ from niix2bids.utils import get_logger
 def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
     if seqinfo.empty: return  # just to run the code faster
+    sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
 
     # keep 3D
     seqinfo = utils.keep_ndim(seqinfo, '3D', seq_regex)
@@ -38,41 +39,64 @@ def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
     descr_regex_list = ['.*_INV1$', '.*_INV2$', '.*_T1_Images$', '.*_UNI_Images$']
     suffix_list      = ['MP2RAGE' ,  'MP2RAGE', 'T1map'        , 'UNIT1'         ]
     for descr_regex in descr_regex_list:
-        seq_suffix = utils.slice_with_genericfield(seqinfo, 'SeriesDescription', descr_regex)
-        for _, desc_grp in seq_suffix.groupby('SeriesDescription'):
+
+        seqinfo_suffix = utils.slice_with_genericfield(seqinfo, 'SeriesDescription', descr_regex)
+
+        suffix = suffix_list[descr_regex_list.index(descr_regex)]
+        if suffix == 'MP2RAGE':
+            inv = descr_regex_list.index(descr_regex) + 1
+        else:
+            inv = ''
+
+        # build groups of parameters
+        columns = ['SeriesDescription']
+        groups = seqinfo_suffix.groupby(columns)
+
+        # loop over groups
+        for grp_name, series in groups:
+
+            first_serie = series.iloc[0]  # they are all the same (except run number), so take the first one
+
+            acq = utils.clean_name(first_serie['ProtocolName'])
+
+            # loop over runs
             run_idx = 0
-            for _, ser_grp in desc_grp.groupby('SeriesNumber'):
+            for row_idx, seq in series.iterrows():
                 run_idx += 1
-                for row_idx, seq in ser_grp.iterrows():
-                    vol                   = seq['Volume']
-                    vol.tag               = 'anat'
-                    vol.suffix            = suffix_list[descr_regex_list.index(descr_regex)]
-                    vol.sub               = utils.clean_name(seq['PatientName'])
-                    vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                    vol.bidsfields['run'] = run_idx
-                    if vol.suffix == 'MP2RAGE':
-                        # _inv-<index>[_part-<label>]_MP2RAGE.nii
-                        vol.bidsfields['inv'] = descr_regex_list.index(descr_regex) + 1
-                    seqinfo = seqinfo.drop(row_idx)
+                vol                   = seq['Volume']
+                vol.tag               = 'anat'
+                vol.suffix            = suffix
+                vol.sub               = sub
+                vol.bidsfields['acq'] = acq
+                vol.bidsfields['run'] = run_idx
+                if bool(inv): vol.bidsfields['inv'] = inv
+                seqinfo = seqinfo.drop(row_idx)  ## !! important : drop series that we already flagged !!
 
     # now that we have dealt with the mp2rage@siemens suffix, we can continue
-    for _, desc_grp in seqinfo.groupby('SeriesDescription'):
-        desc_grp['ImageType'] = desc_grp['ImageType'].apply(lambda x: '_'.join(x))
-        for _, imgtyp_grp in desc_grp.groupby('ImageType'):  # this part will group&build the rec-* field
-            image_type = imgtyp_grp['ImageType'].iloc[0]  # take the first one, they are identical
-            image_type_list = image_type.split('_')
-            image_type_useful_str = ''.join(image_type_list[3:])  # the first 3 items are discarded, the rest is concat
-            run_idx = 0
-            for _, ser_grp in imgtyp_grp.groupby('SeriesNumber'):
-                run_idx += 1
-                for row_idx, seq in ser_grp.iterrows():
-                    vol                   = seq['Volume']
-                    vol.tag               = 'anat'
-                    vol.suffix            = 'T1w'
-                    vol.sub               = utils.clean_name(seq['PatientName'])
-                    vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                    vol.bidsfields['rec'] = image_type_useful_str
-                    vol.bidsfields['run'] = run_idx
+
+    # build groups of parameters
+    columns = ['SeriesDescription', 'ImageTypeStr']
+    groups = seqinfo.groupby(columns)
+
+    # loop over groups
+    for grp_name, series in groups:
+
+        first_serie = series.iloc[0]  # they are all the same (except run number), so take the first one
+
+        acq = utils.clean_name(first_serie['ProtocolName'])
+        image_type_useful = ''.join(first_serie['ImageType'][3:])
+
+        # loop over runs
+        run_idx = 0
+        for row_idx, seq in series.iterrows():
+            run_idx += 1
+            vol                   = seq['Volume']
+            vol.tag               = 'anat'
+            vol.suffix            = 'T1w'
+            vol.sub               = sub
+            vol.bidsfields['acq'] = acq
+            vol.bidsfields['rec'] = image_type_useful
+            vol.bidsfields['run'] = run_idx
 
 
 ########################################################################################################################
