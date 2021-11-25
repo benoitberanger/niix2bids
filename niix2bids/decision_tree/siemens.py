@@ -114,7 +114,7 @@ def prog_tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.spcirR?_')
 
     # ------------------------------------------------------------------------------------------------------------------
-    # T2w
+    # T2w : 3DT2 SPACE
 
     # build groups of parameters
     columns = ['SeriesDescription', 'ImageTypeStr']
@@ -141,7 +141,7 @@ def prog_tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
             vol.bidsfields['run'] = run_idx
 
     # ------------------------------------------------------------------------------------------------------------------
-    # FLAIR
+    # FLAIR : 3DFLAIR SPACE
 
     # build groups of parameters
     columns = ['SeriesDescription', 'ImageTypeStr']
@@ -365,33 +365,57 @@ def prog_fmap(df: pandas.DataFrame, seq_regex: str) -> None:
 
     # separate magnitude & phase images
 
+    # ------------------------------------------------------------------------------------------------------------------
     # magnitude
     seqinfo_mag = utils.slice_with_imagetype(seqinfo, 'M')
-    for _, desc_grp in seqinfo_mag.groupby('SeriesDescription'):
-        run_idx = 0
-        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
-            run_idx += 1
-            for row_idx, seq in ser_grp.iterrows():
-                vol                   = seq['Volume']
-                vol.tag               = 'fmap'
-                vol.suffix            = f"magnitude{int(seq['EchoNumber'])}"  # suffix has to be _magnitude1 _magnitude2
-                vol.sub               = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                vol.bidsfields['run'] = run_idx
 
+    # build groups of parameters
+    columns = ['SeriesDescription', 'EchoNumber']
+    groups = seqinfo_mag.groupby(columns)
+
+    # loop over groups
+    for grp_name, series in groups:
+
+        first_serie = series.iloc[0]  # they are all the same (except run number), so take the first one
+
+        acq = utils.clean_name(first_serie['ProtocolName'])
+
+        # loop over runs
+        run_idx = 0
+        for row_idx, seq in series.iterrows():
+            run_idx += 1
+            vol                   = seq['Volume']
+            vol.tag               = 'fmap'
+            vol.suffix            = f"magnitude{int(seq['EchoNumber'])}"  # suffix has to be _magnitude1 _magnitude2
+            vol.sub               = sub
+            vol.bidsfields['acq'] = acq
+            vol.bidsfields['run'] = run_idx
+
+    # ------------------------------------------------------------------------------------------------------------------
     # phase
     seqinfo_pha = utils.slice_with_imagetype(seqinfo, 'P')
-    for _, desc_grp in seqinfo_pha.groupby('SeriesDescription'):
+
+    # build groups of parameters
+    columns = ['SeriesDescription']
+    groups = seqinfo_pha.groupby(columns)
+
+    # loop over groups
+    for grp_name, series in groups:
+
+        first_serie = series.iloc[0]  # they are all the same (except run number), so take the first one
+
+        acq = utils.clean_name(first_serie['ProtocolName'])
+
+        # loop over runs
         run_idx = 0
-        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
+        for row_idx, seq in series.iterrows():
             run_idx += 1
-            for row_idx, seq in ser_grp.iterrows():
-                vol                   = seq['Volume']
-                vol.tag               = 'fmap'
-                vol.suffix            = 'phasediff'
-                vol.sub               = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                vol.bidsfields['run'] = run_idx
+            vol                   = seq['Volume']
+            vol.tag               = 'fmap'
+            vol.suffix            = 'phasediff'
+            vol.sub               = sub
+            vol.bidsfields['acq'] = acq
+            vol.bidsfields['run'] = run_idx
 
 
 ########################################################################################################################
