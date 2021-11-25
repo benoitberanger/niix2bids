@@ -143,7 +143,9 @@ def fill_echonumber(df: pandas.DataFrame, value: int = -1) -> pandas.DataFrame:
     """
     nan_in_EchoNumber = pandas.isna(df['EchoNumber'])
     if any(nan_in_EchoNumber):
+        pandas.options.mode.chained_assignment = None  # because of super onnoying warning that appears in some case but not all...
         df['EchoNumber'] = df['EchoNumber'].fillna(value)
+        pandas.options.mode.chained_assignment = 'warn'
     return df
 
 

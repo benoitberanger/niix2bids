@@ -303,10 +303,7 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
             vol.bidsfields['dir']  = dir
             vol.bidsfields['run']  = run_idx
             if echo > 0 : vol.bidsfields['echo']  = echo
-            if bool(part):
-                vol.bidsfields['part']  = part
-            else:
-                vol.reason_not_ready = f'unrecognized ImageType, expected M or P => {first_serie["ImageTypeStr"]} : {first_serie["Volume"].nii.path}'
+            vol.bidsfields['part']  = part
             seqinfo = seqinfo.drop(row_idx)  ## !! important : drop series that we flagged as SBRef !!
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -348,10 +345,7 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
             vol.bidsfields['dir']  = dir
             vol.bidsfields['run']  = run_idx
             if echo > 0 : vol.bidsfields['echo']  = echo
-            if bool(part):
-                vol.bidsfields['part']  = part
-            else:
-                vol.reason_not_ready = f'unrecognized ImageType, expected M or P => {first_serie["ImageTypeStr"]} : {first_serie["Volume"].nii.path}'
+            vol.bidsfields['part']  = part
 
 
 ########################################################################################################################
@@ -424,49 +418,36 @@ def prog_gre(df: pandas.DataFrame, seq_regex: str) -> None:
     if seqinfo.empty: return  # just to run the code faster
     sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
 
-    # separate magnitude & phase images
+    # build groups of parameters
+    columns = ['SeriesDescription', 'ImageTypeStr']
+    columns, seqinfo, has_EchoNumber = utils.complete_columns_with_echonumber(columns, seqinfo)
+    groups = seqinfo.groupby(columns)
 
-    # ------------------------------------------------------------------------------------------------------------------
-    # magnitude
-    seqinfo_mag = utils.slice_with_imagetype(seqinfo, 'M')
+    # loop over groups
+    for grp_name, series in groups:
 
-    for _, desc_grp in seqinfo_mag.groupby('SeriesDescription'):
+        first_serie = series.iloc[0]  # they are all the same (except run number), so take the first one
+
+        acq  = utils.clean_name(first_serie['ProtocolName'])
+        echo = utils.get_echo_number(first_serie, has_EchoNumber)
+        part = utils.get_mag_or_pha(first_serie)
+
+        # loop over runs
         run_idx = 0
-        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
+        for _, seq in series.iterrows():
             run_idx += 1
-            for row_idx, seq in ser_grp.iterrows():
-                vol                   = seq['Volume']
-                vol.tag               = 'anat'
-                vol.sub               = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                vol.bidsfields['run'] = run_idx
-                if not pandas.isna(seq['EchoNumber']):
-                    vol.bidsfields['echo'] = int(seq['EchoNumber'])
-                    vol.bidsfields['part'] = 'mag'
-                    vol.suffix             = 'MEGRE'
-                else:
-                    vol.bidsfields['part'] = 'mag'
-                    vol.suffix             = 'T2starw'
-
-    # magnitude
-    seqinfo_pha = utils.slice_with_imagetype(seqinfo, 'P')
-    for _, desc_grp in seqinfo_pha.groupby('SeriesDescription'):
-        run_idx = 0
-        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
-            run_idx += 1
-            for row_idx, seq in ser_grp.iterrows():
-                vol                   = seq['Volume']
-                vol.tag               = 'anat'
-                vol.sub               = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                vol.bidsfields['run'] = run_idx
-                if not pandas.isna(seq['EchoNumber']):
-                    vol.bidsfields['echo'] = int(seq['EchoNumber'])
-                    vol.bidsfields['part'] = 'phase'
-                    vol.suffix             = 'MEGRE'
-                else:
-                    vol.bidsfields['part'] = 'phase'
-                    vol.suffix             = 'T2starw'
+            vol                   = seq['Volume']
+            vol.tag               = 'anat'
+            vol.sub               = sub
+            vol.bidsfields['acq'] = acq
+            vol.bidsfields['run'] = run_idx
+            if echo > 0 :
+                vol.bidsfields['echo']  = echo
+                vol.bidsfields['part']  = part
+                vol.suffix              = 'MEGRE'
+            else:
+                vol.bidsfields['part']  = part
+                vol.suffix              = 'T2starw'
 
 
 ########################################################################################################################
