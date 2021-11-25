@@ -15,12 +15,15 @@ However the objective here is to be 100% automatic.
 ```
 usage: niix2bids [-h] -i DIR [DIR ...] -o DIR [--symlink] [--copyfile] [--logfile] [--no-logfile] [-c FILE] [-v]
 
-Create BIDS architecture from nifti files and .json sidecars. This method expects DICOM converted by dcm2niix (https://github.com/rordenlab/dcm2niix)
+    Create BIDS architecture from nifti files and .json sidecars.
+    This method expects DICOM converted by dcm2niix (https://github.com/rordenlab/dcm2niix)
+    
 
 Required arguments:
   -i DIR [DIR ...], --in_dir DIR [DIR ...]
-                        Nifti directories that will be parsed and transformed into BIDS architecture. This directory is usually the output directory of dcm2niix. This argument accepts several paths. You can use syntax such as
-                        /path/to/nii/2021_*
+                        Nifti directories that will be parsed and transformed into BIDS architecture.
+                        This directory is usually the output directory of dcm2niix.
+                        This argument accepts several paths. You can use syntax such as /path/to/nii/2021_*
   -o DIR, --out_dir DIR
                         Output directory, receiving the BIDS architecture.
 
@@ -28,10 +31,12 @@ Optional arguments:
   -h, --help            show this help message and exit
   --symlink             Use symlink (default). The out_dir will contain symlinks, saving disk spaces
   --copyfile            Use copyfile. Original files will be copied in out_dir. !! be careful of disk space !!
-  --logfile             write logfile (default=True)
-  --no-logfile
+  --logfile             Write logfile (default)
+  --no-logfile          Disable writing logfile
   -c FILE, --config_file FILE
-                        If you want to use non-coded sequences such as WIP or C2P, you can provide a config file. Default file is located in [niix2bids]/config_file/siemens.py
+                        If you want to use non-coded sequences such as WIP or C2P,
+                        you can provide a config file.
+                        Default file is located in [niix2bids]/config_file/siemens.py
   -v, --version         show program's version number and exit
 
 niix2bids_version==0.0.1 + bids_version==1.6.0
@@ -100,4 +105,4 @@ The installation might crash because of wrong dependencies' management. Check [K
 Weird things happened to me at installation due to outdated version of `setuptools`, a packages bundled with `pip`.  
 When I create a new python environment, I never had problem.
 
-`pip install niix2bids` is not possible yet. I did not register this packaged on https://pypi.org/.
+`pip install niix2bids` is not possible yet. I did not register this packaged on https://pypi.org.

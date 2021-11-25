@@ -38,7 +38,8 @@ def get_parser() -> argparse.ArgumentParser:
 
     # Parse command line arguments
     parser = argparse.ArgumentParser(description=description,
-                                     epilog=epilog)
+                                     epilog=epilog,
+                                     formatter_class=argparse.RawTextHelpFormatter)
 
     # This is a strategy found on stackoverflow to separate 'Required arguments' and 'Optional arguments'
     # in a way --help display looks more readable
@@ -49,9 +50,11 @@ def get_parser() -> argparse.ArgumentParser:
     required = parser.add_argument_group("Required arguments")
 
     required.add_argument("-i", "--in_dir",
-                          help="Nifti directories that will be parsed and transformed into BIDS architecture. "
-                               "This directory is usually the output directory of dcm2niix. "
-                               "This argument accepts several paths. You can use syntax such as /path/to/nii/2021_*",
+                          help=(
+                              "Nifti directories that will be parsed and transformed into BIDS architecture.\n"
+                              "This directory is usually the output directory of dcm2niix.\n"
+                              "This argument accepts several paths. You can use syntax such as /path/to/nii/2021_*"
+                          ),
                           nargs='+',
                           metavar='DIR',
                           required=True)
@@ -73,18 +76,21 @@ def get_parser() -> argparse.ArgumentParser:
     optional.set_defaults(symlink_or_copyfile="symlink")
 
     optional.add_argument("--logfile",
-                          help="write logfile (default=True)",
+                          help="Write logfile (default)",
                           dest="logfile",
                           action="store_true")
     optional.add_argument("--no-logfile",
+                          help="Disable writing logfile",
                           dest="logfile",
                           action="store_false")
     optional.set_defaults(logfile=True)
 
     optional.add_argument("-c", "--config_file",
-                          help="If you want to use non-coded sequences such as WIP or C2P, "
-                               "you can provide a config file. "
-                               "Default file is located in [niix2bids]/config_file/siemens.py",
+                          help=(
+                              "If you want to use non-coded sequences such as new Products, WIP or C2P,\n"
+                              "you can provide a config file.\n"
+                              "Default file is located in [niix2bids]/config_file/siemens.py"
+                          ),
                           dest="config_file",
                           metavar='FILE',
                           default=os.path.join( os.path.dirname(niix2bids.__path__[0]), 'config_file', 'siemens.py'))
