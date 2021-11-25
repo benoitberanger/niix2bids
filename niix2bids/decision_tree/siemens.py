@@ -20,7 +20,6 @@ def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
     # keep 3D
     seqinfo = utils.keep_ndim(seqinfo, '3D', seq_regex)
 
-    # ------------------------------------------------------------------------------------------------------------------
     # here is a example of ImageType for all images for 1 sequence :
     # "ImageType": ["ORIGINAL", "PRIMARY", "M", "ND", "NORM"], <--- inv1
     # "ImageType": ["ORIGINAL", "PRIMARY", "M", "ND", "NORM"], <--- inv2
@@ -34,6 +33,7 @@ def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
         log.warning(f"mp(2)rage part-phase not coded yet. Be careful !")
     seqinfo = pandas.concat([seqinfo_mag, seqinfo_T1map])
 
+    # ------------------------------------------------------------------------------------------------------------------
     # in case of mp2rage, there are 3 (or 4 wih T1map) images generated
     # the SeriesDescription is automatically generated such as ProtocolName + suffix, where suffix = _INV1, _INV2,
     # _UNI_Images (and _T1_Images)
@@ -185,26 +185,38 @@ def prog_diff(df: pandas.DataFrame, seq_regex: str) -> None:
         vol.reason_not_ready  = f"dwi non-ORIGINAL {str(seq['ImageType'])}"
     seqinfo = seqinfo_original
 
+    # ------------------------------------------------------------------------------------------------------------------
     # in case of multiband sequence, SBRef images may be generated
     # therefore, we need to deal with them beforehand
-    seqinfo_sbref = utils.slice_with_genericfield(seqinfo, 'SeriesDescription', '.*_SBRef$')
-    for _, desc_grp in seqinfo_sbref.groupby('SeriesDescription'):
-        run_idx = 0
-        for _, dir_grp in desc_grp.groupby('PhaseEncodingDirection'):
-            direction = dir_grp['PhaseEncodingDirection'].iloc(0)[0]  # just get first element, they are identical
-            direction = utils.get_phase_encoding_direction(direction)
-            for _, ser_grp in dir_grp.groupby('SeriesNumber'):
-                run_idx += 1
-                for row_idx, seq in ser_grp.iterrows():
-                    vol                   = seq['Volume']
-                    vol.tag               = 'dwi'
-                    vol.suffix            = 'sbref'
-                    vol.sub               = utils.clean_name(seq['PatientName'])
-                    vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                    vol.bidsfields['dir'] = direction
-                    vol.bidsfields['run'] = run_idx
-                    seqinfo = seqinfo.drop(row_idx)
 
+    seqinfo_sbref = utils.slice_with_genericfield(seqinfo, 'SeriesDescription', '.*_SBRef$')
+
+    # build groups of parameters
+    columns = ['SeriesDescription', 'PhaseEncodingDirection']
+    groups = seqinfo_sbref.groupby(columns)
+
+    # loop over groups
+    for grp_name, series in groups:
+
+        first_serie = series.iloc[0]  # they are all the same (except run number), so take the first one
+
+        acq = utils.clean_name(first_serie['ProtocolName'])
+        dir = utils.get_phase_encoding_direction(first_serie['PhaseEncodingDirection'])
+
+        # loop over runs
+        run_idx = 0
+        for row_idx, seq in series.iterrows():
+            run_idx += 1
+            vol                   = seq['Volume']
+            vol.tag               = 'dwi'
+            vol.suffix            = 'sbref'
+            vol.sub               = sub
+            vol.bidsfields['acq'] = acq
+            vol.bidsfields['dir'] = dir
+            vol.bidsfields['run'] = run_idx
+            seqinfo = seqinfo.drop(row_idx)  ## !! important : drop series that we flagged as SBRef !!
+
+    # ------------------------------------------------------------------------------------------------------------------
     # only keep 4D data
     # ex : 1 volume can be acquired quickly to check subject position over time, so discard it, its not "BOLD"
     for row_idx, seq in seqinfo.iterrows():
@@ -213,31 +225,41 @@ def prog_diff(df: pandas.DataFrame, seq_regex: str) -> None:
             seq['Volume'].reason_not_ready = 'non-4D dwi volume'
             seqinfo = seqinfo.drop(row_idx)
 
+    # ------------------------------------------------------------------------------------------------------------------
     # and now the normal volume
-    for _, desc_grp in seqinfo.groupby('SeriesDescription'):
+
+    # build groups of parameters
+    columns = ['SeriesDescription', 'PhaseEncodingDirection']
+    groups = seqinfo.groupby(columns)
+
+    # loop over groups
+    for grp_name, series in groups:
+
+        first_serie = series.iloc[0]  # they are all the same (except run number), so take the first one
+
+        acq = utils.clean_name(first_serie['ProtocolName'])
+        dir = utils.get_phase_encoding_direction(first_serie['PhaseEncodingDirection'])
+
+        # loop over runs
         run_idx = 0
-        for _, dir_grp in desc_grp.groupby('PhaseEncodingDirection'):
-            direction = dir_grp['PhaseEncodingDirection'].iloc(0)[0]  # just get first element, they are identical
-            direction = utils.get_phase_encoding_direction(direction)
-            for _, ser_grp in dir_grp.groupby('SeriesNumber'):
-                run_idx += 1
-                for row_idx, seq in ser_grp.iterrows():
-                    vol                   = seq['Volume']
-                    vol.tag               = 'dwi'
-                    vol.suffix            = 'dwi'
-                    # check if .bval et .bvec exist
-                    has_bval = vol.check_if_bval_exists()
-                    has_bvec = vol.check_if_bvec_exists()
-                    if not has_bval:
-                        vol.reason_not_ready += '[ no .bval file ] '
-                    if not has_bvec:
-                        vol.reason_not_ready += '[ no .bvec file ] '
-                    vol.sub               = utils.clean_name(seq['PatientName'])
-                    vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                    vol.bidsfields['dir'] = direction
-                    vol.bidsfields['run'] = run_idx
-                    if not has_bval and not has_bvec:
-                        vol.tag           = ''
+        for row_idx, seq in series.iterrows():
+            run_idx += 1
+            vol                   = seq['Volume']
+            vol.tag               = 'dwi'
+            vol.suffix            = 'dwi'
+            vol.sub               = sub
+            vol.bidsfields['acq'] = acq
+            vol.bidsfields['dir'] = dir
+            vol.bidsfields['run'] = run_idx
+            # check if .bval et .bvec exist
+            has_bval = vol.check_if_bval_exists()
+            has_bvec = vol.check_if_bvec_exists()
+            if not has_bval:
+                vol.reason_not_ready += '[ no .bval file ]'
+            if not has_bvec:
+                vol.reason_not_ready += '[ no .bvec file ]'
+            if not has_bval or not has_bvec:
+                vol.tag = ''  # move it => this serie will be discarded
 
 
 ########################################################################################################################
@@ -287,6 +309,7 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol.reason_not_ready = f'unrecognized ImageType, expected M or P => {first_serie["ImageTypeStr"]} : {first_serie["Volume"].nii.path}'
             seqinfo = seqinfo.drop(row_idx)  ## !! important : drop series that we flagged as SBRef !!
 
+    # ------------------------------------------------------------------------------------------------------------------
     # only keep 4D data
     # ex : 1 volume can be acquired quickly to check subject position over time, so discard it, its not "BOLD"
     for row_idx, seq in seqinfo.iterrows():
