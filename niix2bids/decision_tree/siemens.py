@@ -161,7 +161,7 @@ def prog_tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
             run_idx += 1
             vol                   = seq['Volume']
             vol.tag               = 'anat'
-            vol.suffix            = 'T1w'
+            vol.suffix            = 'FLAIR'
             vol.sub               = sub
             vol.bidsfields['acq'] = acq
             vol.bidsfields['rec'] = image_type_useful
@@ -174,7 +174,7 @@ def prog_diff(df: pandas.DataFrame, seq_regex: str) -> None:
     if seqinfo.empty: return  # just to run the code faster
     sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
 
-    # keep 2D
+    # keep 2D acquistion type
     seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
 
     # keep ORIGINAL images, discard ADC, FA, ColFA, ...
@@ -426,8 +426,10 @@ def prog_gre(df: pandas.DataFrame, seq_regex: str) -> None:
 
     # separate magnitude & phase images
 
+    # ------------------------------------------------------------------------------------------------------------------
     # magnitude
     seqinfo_mag = utils.slice_with_imagetype(seqinfo, 'M')
+
     for _, desc_grp in seqinfo_mag.groupby('SeriesDescription'):
         run_idx = 0
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
@@ -524,7 +526,7 @@ def prog_tse(df: pandas.DataFrame, seq_regex: str) -> None:
             run_idx += 1
             vol                   = seq['Volume']
             vol.tag               = 'anat'
-            vol.suffix            = 'T1w'
+            vol.suffix            = 'FLAIR'
             vol.sub               = sub
             vol.bidsfields['acq'] = acq
             vol.bidsfields['rec'] = image_type_useful
