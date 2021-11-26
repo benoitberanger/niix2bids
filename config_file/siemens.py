@@ -9,7 +9,7 @@ product = [
     ['^gre$'                , 'prog_gre'    ],  # FLASH
     ['^tse$'                , 'prog_tse'    ],  # tse, usually AX_2DT1 or AX_2DT2
     ['.*ep2d_se.*'          , 'prog_ep2d_se'],  # SpinEcho EPI
-    ['^haste$'              , 'prog_discard'],  # haste is used as first sequence to get subject position in the magnet
+    ['^haste$'              , 'prog_DISCARD'],  # haste is used as first sequence to get subject position in the magnet
 ]
 
 wip = [

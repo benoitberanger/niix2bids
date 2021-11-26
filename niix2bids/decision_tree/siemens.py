@@ -523,41 +523,84 @@ def prog_ep2d_se(df: pandas.DataFrame, seq_regex: str) -> None:
     # keep 2D
     seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
 
-    for _, desc_grp in seqinfo.groupby('SeriesDescription'):
+    # build groups of parameters
+    columns = ['SeriesDescription', 'PhaseEncodingDirection', 'ImageTypeStr']
+    groups = seqinfo.groupby(columns)
+
+    # loop over groups
+    for grp_name, series in groups:
+
+        first_serie = series.iloc[0]  # they are all the same (except run number), so take the first one
+
+        acq  = utils.clean_name(first_serie['ProtocolName'])
+        dir  = utils.get_phase_encoding_direction(first_serie['PhaseEncodingDirection'])
+        part = utils.get_mag_or_pha(first_serie)
+
+        # loop over runs
         run_idx = 0
-        for _, dir_grp in desc_grp.groupby('PhaseEncodingDirection'):
-            direction = dir_grp['PhaseEncodingDirection'].iloc(0)[0]  # just get first element, they are identical
-            direction = utils.get_phase_encoding_direction(direction)
-            for _, ser_grp in dir_grp.groupby('SeriesNumber'):
-                run_idx += 1
-                for row_idx, seq in ser_grp.iterrows():
-                    vol                   = seq['Volume']
-                    vol.tag               = 'fmap'
-                    vol.suffix            = 'epi'
-                    vol.sub               = utils.clean_name(seq['PatientName'])
-                    vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                    vol.bidsfields['dir'] = direction
-                    vol.bidsfields['run'] = run_idx
+        for _, seq in series.iterrows():
+            run_idx += 1
+            vol                    = seq['Volume']
+            vol.tag                = 'fmap'
+            vol.suffix             = 'epi'
+            vol.sub                = sub
+            vol.bidsfields['acq']  = acq
+            vol.bidsfields['dir']  = dir
+            vol.bidsfields['run']  = run_idx
+            vol.bidsfields['part'] = part
 
 
 ########################################################################################################################
-def prog_discard(df: pandas.DataFrame, seq_regex: str) -> None:
+def prog_DISCARD(df: pandas.DataFrame, seq_regex: str) -> None:
     seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
     if seqinfo.empty: return  # just to run the code faster
     sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
 
-    for _, desc_grp in seqinfo.groupby('SeriesDescription'):
+    # build groups of parameters
+    columns = ['SeriesDescription']
+    groups = seqinfo.groupby(columns)
+
+    # loop over groups
+    for grp_name, series in groups:
+
+        first_serie = series.iloc[0]  # they are all the same (except run number), so take the first one
+
+        acq = utils.clean_name(first_serie['ProtocolName'])
+
+        # loop over runs
+        run_idx = 0
+        for _, seq in series.iterrows():
+            run_idx += 1
+            vol                    = seq['Volume']
+            vol.tag                = 'DISCARD'
+            vol.suffix             = ''
+            vol.sub                = sub
+            vol.bidsfields['acq']  = acq
+            vol.bidsfields['run']  = run_idx
+            vol.reason_not_ready  = f'discard PulseSequenceDetails = {seq_regex}'
+
+
+########################################################################################################################
+def prog_UNKNOWN(df: pandas.DataFrame) -> None:
+
+    for _, desc_grp in df.groupby('SeriesDescription'):
         run_idx = 0
         for _, ser_grp in desc_grp.groupby('SeriesNumber'):
             run_idx += 1
             for row_idx, seq in ser_grp.iterrows():
-                vol                   = seq['Volume']
-                vol.tag               = 'DISCARD'
-                vol.suffix            = ''
-                vol.sub               = utils.clean_name(seq['PatientName'])
-                vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                vol.bidsfields['run'] = run_idx
-                vol.reason_not_ready  = f'discard PulseSequenceDetails = {seq_regex}'
+                vol                       = seq['Volume']
+                # here is the important part : if we already parsed the the sequence, then skip it, else tag it UNKNOWN
+                if len(vol.tag) > 0:
+                    pass
+                elif len(vol.reason_not_ready) > 0:
+                    pass
+                else:
+                    vol.tag               = 'UNKNOWN'
+                    vol.suffix            = ''
+                    vol.sub               = utils.clean_name(seq['PatientName'])
+                    vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
+                    vol.bidsfields['run'] = run_idx
+                    vol.reason_not_ready  = f"unknown PulseSequenceDetails = {seq['PulseSequenceDetails']}"
 
 
 ########################################################################################################################
@@ -592,6 +635,8 @@ def run(volume_list: List[Volume], config: list) -> None:
     df['ImageTypeStr'] = df['ImageType'].apply(lambda s: '_'.join(s))
 
     # subject by subject sequence group
+    # this is mandotory, otherwise you would mix run numbers when series have same SeriesDescription,
+    # which is usual in a cohort
     df_by_subject = df.groupby('PatientName')
 
     # call each routine depending on the sequence name
@@ -601,24 +646,7 @@ def run(volume_list: List[Volume], config: list) -> None:
             func(group, seq_regex)  # execute the prog_
 
     # deal with unknown sequences
-    for _, desc_grp in df.groupby('SeriesDescription'):
-        run_idx = 0
-        for _, ser_grp in desc_grp.groupby('SeriesNumber'):
-            run_idx += 1
-            for row_idx, seq in ser_grp.iterrows():
-                vol                       = seq['Volume']
-                # here is the important part : if we already parsed the the sequence, then skip it, else tag it UNKNOWN
-                if len(vol.tag) > 0:
-                    pass
-                elif len(vol.reason_not_ready) > 0:
-                    pass
-                else:
-                    vol.tag               = 'UNKNOWN'
-                    vol.suffix            = ''
-                    vol.sub               = utils.clean_name(seq['PatientName'])
-                    vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
-                    vol.bidsfields['run'] = run_idx
-                    vol.reason_not_ready  = f"unknown PulseSequenceDetails = {seq['PulseSequenceDetails']}"
+    prog_UNKNOWN(df)
 
     # all done
     log.info(f'"Siemens" decision tree done')
