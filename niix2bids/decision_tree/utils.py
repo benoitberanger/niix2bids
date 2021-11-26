@@ -126,10 +126,54 @@ def get_phase_encoding_direction(input_str: str) -> str:
 
 
 ########################################################################################################################
-def keep_ND(df: pandas.DataFrame, dim: str, seq_regex: str) -> pandas.DataFrame:
-    df_ND = slice_with_genericfield(df, 'MRAcquisitionType', dim)
+def keep_ndim(df: pandas.DataFrame, ndim: str, seq_regex: str) -> pandas.DataFrame:
+    df_ND = slice_with_genericfield(df, 'MRAcquisitionType', ndim)
     df_bad = df.drop(df_ND.index)
     for _, seq in df_bad.iterrows():
         vol                   = seq['Volume']
-        vol.reason_not_ready  = f"non-{dim} acquisition with PulseSequenceDetails = {seq_regex}"
+        vol.reason_not_ready  = f"non-{ndim} acquisition with PulseSequenceDetails = {seq_regex}"
     return df_ND
+
+
+########################################################################################################################
+def fill_echonumber(df: pandas.DataFrame, value: int = -1) -> pandas.DataFrame:
+    """
+    DataFrame CANNOT iterate overs groups with nan.
+    So here is a workaround, replace NaN with -1
+    """
+    nan_in_EchoNumber = pandas.isna(df['EchoNumber'])
+    if any(nan_in_EchoNumber):
+        pandas.options.mode.chained_assignment = None  # because of super onnoying warning that appears in some case but not all...
+        df['EchoNumber'] = df['EchoNumber'].fillna(value)
+        pandas.options.mode.chained_assignment = 'warn'
+    return df
+
+
+########################################################################################################################
+def get_mag_or_pha(df: pandas.DataFrame) -> str:
+    mag_or_pha = df["ImageTypeStr"].split('_')[2]
+    if mag_or_pha == 'M':
+        suffix = 'mag'
+    elif mag_or_pha == 'P':
+        suffix = 'phase'
+    else:
+        suffix = ''
+    return suffix
+
+
+########################################################################################################################
+def get_echo_number(df: pandas.DataFrame, has_EchoNumber: bool) -> int:
+    if has_EchoNumber:
+        echo = int(df['EchoNumber'])
+    else:
+        echo = -1
+    return echo
+
+
+########################################################################################################################
+def complete_columns_with_echonumber(columns: list, df: pandas.DataFrame) -> [list, pandas.DataFrame, bool] :
+    has_EchoNumber = 'EchoNumber' in df.columns
+    if has_EchoNumber:
+        columns.append('EchoNumber')
+        df = fill_echonumber(df)
+    return columns, df, has_EchoNumber
