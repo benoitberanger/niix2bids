@@ -71,7 +71,7 @@ def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol.bidsfields['acq'] = acq
                 vol.bidsfields['run'] = run_idx
                 if bool(inv): vol.bidsfields['inv'] = inv
-                seqinfo = seqinfo.drop(row_idx)  ## !! important : drop series that we already flagged !!
+                seqinfo = seqinfo.drop(row_idx)  # !! important : drop series that we already flagged !!
 
     # ------------------------------------------------------------------------------------------------------------------
     # now that we have dealt with the mp2rage@siemens suffix, we can continue
@@ -214,7 +214,7 @@ def prog_diff(df: pandas.DataFrame, seq_regex: str) -> None:
             vol.bidsfields['acq'] = acq
             vol.bidsfields['dir'] = dir
             vol.bidsfields['run'] = run_idx
-            seqinfo = seqinfo.drop(row_idx)  ## !! important : drop series that we flagged as SBRef !!
+            seqinfo = seqinfo.drop(row_idx)  # !! important : drop series that we flagged as SBRef !!
 
     # ------------------------------------------------------------------------------------------------------------------
     # only keep 4D data
@@ -304,7 +304,7 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
             vol.bidsfields['run']  = run_idx
             if echo > 0 : vol.bidsfields['echo']  = echo
             vol.bidsfields['part']  = part
-            seqinfo = seqinfo.drop(row_idx)  ## !! important : drop series that we flagged as SBRef !!
+            seqinfo = seqinfo.drop(row_idx)  # !! important : drop series that we flagged as SBRef !!
 
     # ------------------------------------------------------------------------------------------------------------------
     # only keep 4D data
@@ -523,8 +523,16 @@ def prog_ep2d_se(df: pandas.DataFrame, seq_regex: str) -> None:
     # keep 2D
     seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
 
+    # keep magnitude, since phase is not part of BIDS specs at the moment
+    seqinfo_magnitude = utils.slice_with_imagetype(seqinfo, 'M')
+    seqinfo_discard = seqinfo.drop(seqinfo_magnitude.index)
+    for row_idx, seq in seqinfo_discard.iterrows():
+        vol                   = seq['Volume']
+        vol.reason_not_ready  = f"fmap epi non-magnitude {str(seq['ImageType'])}"
+    seqinfo = seqinfo_magnitude
+
     # build groups of parameters
-    columns = ['SeriesDescription', 'PhaseEncodingDirection', 'ImageTypeStr']
+    columns = ['SeriesDescription', 'PhaseEncodingDirection']
     groups = seqinfo.groupby(columns)
 
     # loop over groups
@@ -534,7 +542,6 @@ def prog_ep2d_se(df: pandas.DataFrame, seq_regex: str) -> None:
 
         acq  = utils.clean_name(first_serie['ProtocolName'])
         dir  = utils.get_phase_encoding_direction(first_serie['PhaseEncodingDirection'])
-        part = utils.get_mag_or_pha(first_serie)
 
         # loop over runs
         run_idx = 0
@@ -547,7 +554,6 @@ def prog_ep2d_se(df: pandas.DataFrame, seq_regex: str) -> None:
             vol.bidsfields['acq']  = acq
             vol.bidsfields['dir']  = dir
             vol.bidsfields['run']  = run_idx
-            vol.bidsfields['part'] = part
 
 
 ########################################################################################################################
