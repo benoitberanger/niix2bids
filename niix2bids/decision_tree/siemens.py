@@ -12,10 +12,10 @@ from niix2bids.utils import get_logger
 
 
 ########################################################################################################################
-def prog_mprage(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
+def prog_mprage(seqinfo: pandas.DataFrame, sub_name: str) -> None:
 
     # keep 3D
-    seqinfo = utils.keep_ndim(seqinfo, '3D', seq_regex)
+    seqinfo = utils.keep_ndim(seqinfo, '3D')
 
     # here is a example of ImageType for all images for 1 sequence :
     # "ImageType": ["ORIGINAL", "PRIMARY", "M"     , "ND", "NORM"], <--- inv1
@@ -99,10 +99,10 @@ def prog_mprage(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> Non
 
 
 ########################################################################################################################
-def prog_tse_vfl(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
+def prog_tse_vfl(seqinfo: pandas.DataFrame, sub_name: str) -> None:
 
     # keep 3D
-    seqinfo = utils.keep_ndim(seqinfo, '3D', seq_regex)
+    seqinfo = utils.keep_ndim(seqinfo, '3D')
 
     seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.spcR?_'  )
     seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.spcirR?_')
@@ -163,10 +163,10 @@ def prog_tse_vfl(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> No
 
 
 ########################################################################################################################
-def prog_diff(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
+def prog_diff(seqinfo: pandas.DataFrame, sub_name: str) -> None:
 
     # keep 2D acquistion type
-    seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
+    seqinfo = utils.keep_ndim(seqinfo, '2D')
 
     # keep ORIGINAL images, discard ADC, FA, ColFA, ...
     seqinfo_original = utils.slice_with_imagetype_original(seqinfo)
@@ -209,9 +209,9 @@ def prog_diff(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
 
     # ------------------------------------------------------------------------------------------------------------------
     # only keep 4D data
-    # ex : 1 volume can be acquired quickly to check sub_nameject position over time, so discard it, its not "BOLD"
+    # ex : 1 volume can be acquired quickly to check subject position over time, so discard it, its not "BOLD"
     for row_idx, seq in seqinfo.iterrows():
-        nii = nibabel.load( seq['Volume'].nii.path )
+        nii = nibabel.load(seq['Volume'].nii.path)
         if nii.ndim < 4:  # check 4D
             seq['Volume'].reason_not_ready = 'non-4D dwi volume'
             seqinfo = seqinfo.drop(row_idx)
@@ -250,14 +250,14 @@ def prog_diff(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
             if not has_bvec:
                 vol.reason_not_ready += '[ no .bvec file ]'
             if not has_bval or not has_bvec:
-                vol.tag = ''  # move it => this serie will be discarded
+                vol.tag = ''  # remove it => this serie will be discarded
 
 
 ########################################################################################################################
-def prog_bold(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
+def prog_bold(seqinfo: pandas.DataFrame, sub_name: str) -> None:
 
     # keep 2D acquistion type
-    seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
+    seqinfo = utils.keep_ndim(seqinfo, '2D')
 
     # ------------------------------------------------------------------------------------------------------------------
     # in case of multiband sequence, SBRef images may be generated
@@ -266,7 +266,7 @@ def prog_bold(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
 
     # build groups of parameters
     columns = ['SeriesDescription', 'PhaseEncodingDirection', 'ImageTypeStr']
-    columns, seqinfo_sbref, has_EchoNumber = utils.complete_columns_with_echonumber(columns, seqinfo)
+    columns, seqinfo_sbref, has_EchoNumber = utils.complete_columns_with_echonumber(columns, seqinfo_sbref)
     groups = seqinfo_sbref.groupby(columns)
 
     # loop over groups
@@ -296,7 +296,7 @@ def prog_bold(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
 
     # ------------------------------------------------------------------------------------------------------------------
     # only keep 4D data
-    # ex : 1 volume can be acquired quickly to check sub_nameject position over time, so discard it, its not "BOLD"
+    # ex : 1 volume can be acquired quickly to check subject position over time, so discard it, its not "BOLD"
     for row_idx, seq in seqinfo.iterrows():
         nii = nibabel.load( seq['Volume'].nii.path )
         if nii.ndim < 4:  # check 4D
@@ -337,10 +337,10 @@ def prog_bold(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
 
 
 ########################################################################################################################
-def prog_fmap(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
+def prog_fmap(seqinfo: pandas.DataFrame, sub_name: str) -> None:
 
     # keep 2D
-    seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
+    seqinfo = utils.keep_ndim(seqinfo, '2D')
 
     # separate magnitude & phase images
 
@@ -398,7 +398,7 @@ def prog_fmap(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
 
 
 ########################################################################################################################
-def prog_gre(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
+def prog_gre(seqinfo: pandas.DataFrame, sub_name: str) -> None:
 
     # build groups of parameters
     columns = ['SeriesDescription', 'ImageTypeStr']
@@ -433,7 +433,7 @@ def prog_gre(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
 
 
 ########################################################################################################################
-def prog_tse(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
+def prog_tse(seqinfo: pandas.DataFrame, sub_name: str) -> None:
 
     seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.*tse')
     seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.*tir')
@@ -494,15 +494,15 @@ def prog_tse(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
 
 
 ########################################################################################################################
-def prog_ep2d_se(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
+def prog_ep2d_se(seqinfo: pandas.DataFrame, sub_name: str) -> None:
 
     # keep 2D
-    seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
+    seqinfo = utils.keep_ndim(seqinfo, '2D')
 
     # keep magnitude, since phase is not part of BIDS specs at the moment
     seqinfo_magnitude = utils.slice_with_imagetype(seqinfo, 'M')
     seqinfo_discard = seqinfo.drop(seqinfo_magnitude.index)
-    for row_idx, seq in seqinfo_discard.iterrows():
+    for _, seq in seqinfo_discard.iterrows():
         vol                   = seq['Volume']
         vol.reason_not_ready  = f"fmap epi non-magnitude {str(seq['ImageType'])}"
     seqinfo = seqinfo_magnitude
@@ -533,7 +533,7 @@ def prog_ep2d_se(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> No
 
 
 ########################################################################################################################
-def prog_DISCARD(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
+def prog_DISCARD(seqinfo: pandas.DataFrame, sub_name: str) -> None:
 
     # build groups of parameters
     columns = ['SeriesDescription']
@@ -556,7 +556,7 @@ def prog_DISCARD(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> No
             vol.sub                = sub_name
             vol.bidsfields['acq']  = acq
             vol.bidsfields['run']  = run_idx
-            vol.reason_not_ready  = f'discard PulseSequenceDetails = {seq_regex}'
+            vol.reason_not_ready  = f'discard PulseSequenceDetails = {first_serie["PulseSequenceDetails"]}'
 
 
 ########################################################################################################################
@@ -614,7 +614,7 @@ def run(volume_list: List[Volume], config: list) -> None:
     df['ImageTypeStr'] = df['ImageType'].apply(lambda s: '_'.join(s))
 
     # subject by subject group of sequences
-    # this is mandotory, otherwise you would mix run numbers when series have same SeriesDescription,
+    # this is mandatory, otherwise you would mix run numbers when series have same SeriesDescription,
     # which is usual in a cohort
     df_by_subject = df.groupby('PatientName')
 
@@ -627,7 +627,7 @@ def run(volume_list: List[Volume], config: list) -> None:
             if seqinfo.empty: continue          # just to run the code faster
 
             func = eval(fcn_name)               # fetch the name of the prog_ to call dynamically
-            func(seqinfo, sub_name, seq_regex)  # execute the prog_
+            func(seqinfo, sub_name)             # execute the prog_
 
     # deal with unknown sequences
     prog_UNKNOWN(df)

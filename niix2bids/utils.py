@@ -73,14 +73,14 @@ def logit(message, level=logging.INFO):
         def wrapper(*args, **kwargs):
             log = logging.getLogger(__name__ + ':' + func.__name__)
 
-            msg = message + ' # start'
+            msg = message + ' # start...'
             log.log(level, msg)
 
             start_time = time.time()
             res = func(*args, **kwargs)
             stop_time = time.time()
 
-            msg = message + f" # done in {stop_time-start_time:.3f}s"
+            msg = message + f" # ...done in {stop_time-start_time:.3f}s"
             log.log(level, msg)
 
             return res

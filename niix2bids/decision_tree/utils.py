@@ -126,12 +126,12 @@ def get_phase_encoding_direction(input_str: str) -> str:
 
 
 ########################################################################################################################
-def keep_ndim(df: pandas.DataFrame, ndim: str, seq_regex: str) -> pandas.DataFrame:
+def keep_ndim(df: pandas.DataFrame, ndim: str) -> pandas.DataFrame:
     df_ND = slice_with_genericfield(df, 'MRAcquisitionType', ndim)
     df_bad = df.drop(df_ND.index)
     for _, seq in df_bad.iterrows():
         vol                   = seq['Volume']
-        vol.reason_not_ready  = f"non-{ndim} acquisition with PulseSequenceDetails = {seq_regex}"
+        vol.reason_not_ready  = f"non-{ndim} acquisition with PulseSequenceDetails = {seq['PulseSequenceDetails']}"
     return df_ND
 
 
