@@ -12,19 +12,16 @@ from niix2bids.utils import get_logger
 
 
 ########################################################################################################################
-def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty: return  # just to run the code faster
-    sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
+def prog_mprage(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
 
     # keep 3D
     seqinfo = utils.keep_ndim(seqinfo, '3D', seq_regex)
 
     # here is a example of ImageType for all images for 1 sequence :
-    # "ImageType": ["ORIGINAL", "PRIMARY", "M", "ND", "NORM"], <--- inv1
-    # "ImageType": ["ORIGINAL", "PRIMARY", "M", "ND", "NORM"], <--- inv2
-    # "ImageType": ["DERIVED", "PRIMARY", "T1 MAP", "ND"],     <--- T1map
-    # "ImageType": ["DERIVED", "PRIMARY", "M", "ND", "UNI"],   <--- UNIT1
+    # "ImageType": ["ORIGINAL", "PRIMARY", "M"     , "ND", "NORM"], <--- inv1
+    # "ImageType": ["ORIGINAL", "PRIMARY", "M"     , "ND", "NORM"], <--- inv2
+    # "ImageType": ["DERIVED" , "PRIMARY", "T1 MAP", "ND"        ], <--- T1map
+    # "ImageType": ["DERIVED" , "PRIMARY", "M"     , "ND", "UNI" ], <--- UNIT1
     seqinfo_mag   = utils.slice_with_imagetype(seqinfo, 'M')
     seqinfo_T1map = utils.slice_with_imagetype(seqinfo, 'T1 MAP')
     seqinfo_pha   = utils.slice_with_imagetype(seqinfo, 'P')
@@ -67,7 +64,7 @@ def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
                 vol                   = seq['Volume']
                 vol.tag               = 'anat'
                 vol.suffix            = suffix
-                vol.sub               = sub
+                vol.sub               = sub_name
                 vol.bidsfields['acq'] = acq
                 vol.bidsfields['run'] = run_idx
                 if bool(inv): vol.bidsfields['inv'] = inv
@@ -95,17 +92,14 @@ def prog_mprage(df: pandas.DataFrame, seq_regex: str) -> None:
             vol                   = seq['Volume']
             vol.tag               = 'anat'
             vol.suffix            = 'T1w'
-            vol.sub               = sub
+            vol.sub               = sub_name
             vol.bidsfields['acq'] = acq
             vol.bidsfields['rec'] = image_type_useful
             vol.bidsfields['run'] = run_idx
 
 
 ########################################################################################################################
-def prog_tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty: return  # just to run the code faster
-    sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
+def prog_tse_vfl(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
 
     # keep 3D
     seqinfo = utils.keep_ndim(seqinfo, '3D', seq_regex)
@@ -135,7 +129,7 @@ def prog_tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
             vol                   = seq['Volume']
             vol.tag               = 'anat'
             vol.suffix            = 'T2w'
-            vol.sub               = sub
+            vol.sub               = sub_name
             vol.bidsfields['acq'] = acq
             vol.bidsfields['rec'] = image_type_useful
             vol.bidsfields['run'] = run_idx
@@ -162,17 +156,14 @@ def prog_tse_vfl(df: pandas.DataFrame, seq_regex: str) -> None:
             vol                   = seq['Volume']
             vol.tag               = 'anat'
             vol.suffix            = 'FLAIR'
-            vol.sub               = sub
+            vol.sub               = sub_name
             vol.bidsfields['acq'] = acq
             vol.bidsfields['rec'] = image_type_useful
             vol.bidsfields['run'] = run_idx
 
 
 ########################################################################################################################
-def prog_diff(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty: return  # just to run the code faster
-    sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
+def prog_diff(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
 
     # keep 2D acquistion type
     seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
@@ -210,7 +201,7 @@ def prog_diff(df: pandas.DataFrame, seq_regex: str) -> None:
             vol                   = seq['Volume']
             vol.tag               = 'dwi'
             vol.suffix            = 'sbref'
-            vol.sub               = sub
+            vol.sub               = sub_name
             vol.bidsfields['acq'] = acq
             vol.bidsfields['dir'] = dir
             vol.bidsfields['run'] = run_idx
@@ -218,7 +209,7 @@ def prog_diff(df: pandas.DataFrame, seq_regex: str) -> None:
 
     # ------------------------------------------------------------------------------------------------------------------
     # only keep 4D data
-    # ex : 1 volume can be acquired quickly to check subject position over time, so discard it, its not "BOLD"
+    # ex : 1 volume can be acquired quickly to check sub_nameject position over time, so discard it, its not "BOLD"
     for row_idx, seq in seqinfo.iterrows():
         nii = nibabel.load( seq['Volume'].nii.path )
         if nii.ndim < 4:  # check 4D
@@ -247,7 +238,7 @@ def prog_diff(df: pandas.DataFrame, seq_regex: str) -> None:
             vol                   = seq['Volume']
             vol.tag               = 'dwi'
             vol.suffix            = 'dwi'
-            vol.sub               = sub
+            vol.sub               = sub_name
             vol.bidsfields['acq'] = acq
             vol.bidsfields['dir'] = dir
             vol.bidsfields['run'] = run_idx
@@ -263,10 +254,7 @@ def prog_diff(df: pandas.DataFrame, seq_regex: str) -> None:
 
 
 ########################################################################################################################
-def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty: return  # just to run the code faster
-    sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
+def prog_bold(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
 
     # keep 2D acquistion type
     seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
@@ -298,7 +286,7 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
             vol                    = seq['Volume']
             vol.tag                = 'func'
             vol.suffix             = 'sbref'
-            vol.sub                = sub
+            vol.sub                = sub_name
             vol.bidsfields['task'] = task
             vol.bidsfields['dir']  = dir
             vol.bidsfields['run']  = run_idx
@@ -308,7 +296,7 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
 
     # ------------------------------------------------------------------------------------------------------------------
     # only keep 4D data
-    # ex : 1 volume can be acquired quickly to check subject position over time, so discard it, its not "BOLD"
+    # ex : 1 volume can be acquired quickly to check sub_nameject position over time, so discard it, its not "BOLD"
     for row_idx, seq in seqinfo.iterrows():
         nii = nibabel.load( seq['Volume'].nii.path )
         if nii.ndim < 4:  # check 4D
@@ -340,7 +328,7 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
             vol                    = seq['Volume']
             vol.tag                = 'func'
             vol.suffix             = 'bold'
-            vol.sub                = sub
+            vol.sub                = sub_name
             vol.bidsfields['task'] = task
             vol.bidsfields['dir']  = dir
             vol.bidsfields['run']  = run_idx
@@ -349,10 +337,7 @@ def prog_bold(df: pandas.DataFrame, seq_regex: str) -> None:
 
 
 ########################################################################################################################
-def prog_fmap(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty: return  # just to run the code faster
-    sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
+def prog_fmap(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
 
     # keep 2D
     seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
@@ -381,7 +366,7 @@ def prog_fmap(df: pandas.DataFrame, seq_regex: str) -> None:
             vol                   = seq['Volume']
             vol.tag               = 'fmap'
             vol.suffix            = f"magnitude{int(seq['EchoNumber'])}"  # suffix has to be _magnitude1 _magnitude2
-            vol.sub               = sub
+            vol.sub               = sub_name
             vol.bidsfields['acq'] = acq
             vol.bidsfields['run'] = run_idx
 
@@ -407,16 +392,13 @@ def prog_fmap(df: pandas.DataFrame, seq_regex: str) -> None:
             vol                   = seq['Volume']
             vol.tag               = 'fmap'
             vol.suffix            = 'phasediff'
-            vol.sub               = sub
+            vol.sub               = sub_name
             vol.bidsfields['acq'] = acq
             vol.bidsfields['run'] = run_idx
 
 
 ########################################################################################################################
-def prog_gre(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty: return  # just to run the code faster
-    sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
+def prog_gre(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
 
     # build groups of parameters
     columns = ['SeriesDescription', 'ImageTypeStr']
@@ -438,7 +420,7 @@ def prog_gre(df: pandas.DataFrame, seq_regex: str) -> None:
             run_idx += 1
             vol                   = seq['Volume']
             vol.tag               = 'anat'
-            vol.sub               = sub
+            vol.sub               = sub_name
             vol.bidsfields['acq'] = acq
             vol.bidsfields['run'] = run_idx
             if echo > 0 :
@@ -451,10 +433,7 @@ def prog_gre(df: pandas.DataFrame, seq_regex: str) -> None:
 
 
 ########################################################################################################################
-def prog_tse(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty: return  # just to run the code faster
-    sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
+def prog_tse(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
 
     seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.*tse')
     seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.*tir')
@@ -481,7 +460,7 @@ def prog_tse(df: pandas.DataFrame, seq_regex: str) -> None:
             vol                   = seq['Volume']
             vol.tag               = 'anat'
             vol.suffix            = 'T2w'
-            vol.sub               = sub
+            vol.sub               = sub_name
             vol.bidsfields['acq'] = acq
             vol.bidsfields['rec'] = image_type_useful
             vol.bidsfields['run'] = run_idx
@@ -508,17 +487,14 @@ def prog_tse(df: pandas.DataFrame, seq_regex: str) -> None:
             vol                   = seq['Volume']
             vol.tag               = 'anat'
             vol.suffix            = 'FLAIR'
-            vol.sub               = sub
+            vol.sub               = sub_name
             vol.bidsfields['acq'] = acq
             vol.bidsfields['rec'] = image_type_useful
             vol.bidsfields['run'] = run_idx
 
 
 ########################################################################################################################
-def prog_ep2d_se(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty: return  # just to run the code faster
-    sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
+def prog_ep2d_se(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
 
     # keep 2D
     seqinfo = utils.keep_ndim(seqinfo, '2D', seq_regex)
@@ -550,17 +526,14 @@ def prog_ep2d_se(df: pandas.DataFrame, seq_regex: str) -> None:
             vol                    = seq['Volume']
             vol.tag                = 'fmap'
             vol.suffix             = 'epi'
-            vol.sub                = sub
+            vol.sub                = sub_name
             vol.bidsfields['acq']  = acq
             vol.bidsfields['dir']  = dir
             vol.bidsfields['run']  = run_idx
 
 
 ########################################################################################################################
-def prog_DISCARD(df: pandas.DataFrame, seq_regex: str) -> None:
-    seqinfo = utils.slice_with_genericfield(df, 'PulseSequenceDetails', seq_regex)  # get list of corresponding sequence
-    if seqinfo.empty: return  # just to run the code faster
-    sub = utils.clean_name(seqinfo.iloc[0]['PatientName'])  # this does not change
+def prog_DISCARD(seqinfo: pandas.DataFrame, sub_name: str, seq_regex: str) -> None:
 
     # build groups of parameters
     columns = ['SeriesDescription']
@@ -580,7 +553,7 @@ def prog_DISCARD(df: pandas.DataFrame, seq_regex: str) -> None:
             vol                    = seq['Volume']
             vol.tag                = 'DISCARD'
             vol.suffix             = ''
-            vol.sub                = sub
+            vol.sub                = sub_name
             vol.bidsfields['acq']  = acq
             vol.bidsfields['run']  = run_idx
             vol.reason_not_ready  = f'discard PulseSequenceDetails = {seq_regex}'
@@ -640,16 +613,21 @@ def run(volume_list: List[Volume], config: list) -> None:
     # [ORIGINAL, PRIMARY, M, ND, MOSAIC] -> ORIGINAL_PRIMARY_M_ND_MOSAIC
     df['ImageTypeStr'] = df['ImageType'].apply(lambda s: '_'.join(s))
 
-    # subject by subject sequence group
+    # subject by subject group of sequences
     # this is mandotory, otherwise you would mix run numbers when series have same SeriesDescription,
     # which is usual in a cohort
     df_by_subject = df.groupby('PatientName')
 
     # call each routine depending on the sequence name
-    for name, group in df_by_subject:       # loop over subjects
-        for seq_regex, fcn_name in config:  # loop over sequence decision tree
-            func = eval(fcn_name)   # fetch the name of the prog_ to call dynamically
-            func(group, seq_regex)  # execute the prog_
+    for sub_name, df_subject in df_by_subject:  # loop over subjects
+        for seq_regex, fcn_name in config:      # loop over sequence decision tree
+
+            # get list of corresponding sequence
+            seqinfo = utils.slice_with_genericfield(df_subject, 'PulseSequenceDetails', seq_regex)
+            if seqinfo.empty: continue          # just to run the code faster
+
+            func = eval(fcn_name)               # fetch the name of the prog_ to call dynamically
+            func(seqinfo, sub_name, seq_regex)  # execute the prog_
 
     # deal with unknown sequences
     prog_UNKNOWN(df)
