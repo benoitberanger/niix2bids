@@ -620,6 +620,7 @@ def run(volume_list: List[Volume], config: list) -> None:
 
     # call each routine depending on the sequence name
     for sub_name, df_subject in df_by_subject:  # loop over subjects
+        sub_name_clean = utils.clean_name(sub_name)
         for seq_regex, fcn_name in config:      # loop over sequence decision tree
 
             # get list of corresponding sequence
@@ -627,7 +628,7 @@ def run(volume_list: List[Volume], config: list) -> None:
             if seqinfo.empty: continue          # just to run the code faster
 
             func = eval(fcn_name)               # fetch the name of the prog_ to call dynamically
-            func(seqinfo, sub_name)             # execute the prog_
+            func(seqinfo, sub_name_clean)       # execute the prog_
 
     # deal with unknown sequences
     prog_UNKNOWN(df)
