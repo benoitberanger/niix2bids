@@ -1,4 +1,4 @@
-__version__ = '0.0.1'
+__version__ = 'v1.0.0'
 
 
 def get_niix2bids_version() -> str:
@@ -6,4 +6,4 @@ def get_niix2bids_version() -> str:
 
 
 def get_bids_version() -> str:
-    return '1.6.0'
+    return 'v1.6.0'
