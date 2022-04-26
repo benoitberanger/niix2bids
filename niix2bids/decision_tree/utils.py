@@ -14,11 +14,7 @@ from niix2bids.utils import get_logger
 ########################################################################################################################
 def assemble_list_param(volume_list: List[Volume]) -> List[dict]:
 
-    list_param = []
-    for volume in volume_list:
-        list_param.append(volume.seqparam)
-
-    return list_param
+    return [vol.seqparam for vol in volume_list]
 
 
 ########################################################################################################################
