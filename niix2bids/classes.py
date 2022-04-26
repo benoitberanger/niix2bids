@@ -1,6 +1,5 @@
-import os  # for path management
+import os    # for path management
 import json  # json file loading
-
 
 ########################################################################################################################
 class File:
@@ -102,3 +101,10 @@ class Volume:
         else:
             self.bvec = Bvec(bvec_file)
             return True
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def __lt__(self, other):
+        return self.__repr__()< other.__repr__()
+
+    def __gt__(self, other):
+        return self.__repr__() > other.__repr__()
