@@ -93,7 +93,7 @@ def get_parser() -> argparse.ArgumentParser:
                           ),
                           dest="config_file",
                           metavar='FILE',
-                          default=os.path.join( os.path.dirname(niix2bids.__path__[0]), 'config_file', 'siemens.py'))
+                          default=os.path.join( niix2bids.__path__[0], 'config_file', 'siemens.py'))
 
     optional.add_argument("-v", "--version",
                           action="version",
