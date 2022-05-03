@@ -34,12 +34,14 @@ Optional arguments:
   --logfile             Write logfile (default)
   --no-logfile          Disable writing logfile
   -c FILE, --config_file FILE
-                        If you want to use non-coded sequences such as WIP or C2P,
+                        If you want to use non-coded sequences such as new Products, WIP or C2P,
                         you can provide a config file.
-                        Default file is located in [niix2bids]/config_file/siemens.py
+                        Default location is ~/niix2bids_config_file/siemens.py
+                        If default location is not present, try to use the template file 
+                        located in [niix2bids]/config_file/siemens.py
   -v, --version         show program's version number and exit
 
-niix2bids_version==0.0.1 + bids_version==1.6.0
+niix2bids_version==v1.2.0 + bids_version==v1.6.0
 ```
 
 ## Limitations

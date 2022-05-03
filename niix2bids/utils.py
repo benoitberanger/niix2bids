@@ -94,21 +94,28 @@ def logit(message, level=logging.INFO):
 def load_config_file(config_file: str) -> list:
     log = get_logger()
 
-    if os.path.exists(config_file):
-        if os.path.isfile(config_file):
-            script_content = runpy.run_path(config_file)
-            if "config" in script_content:
-                config = script_content['config']
-                log.info(f"using config_file : {config_file}")
-                return config
-            else:
-                log.critical(f"config_file incorrect (no 'config' variable inside) : {config_file}")
-                sys.exit(1)
-        else:
-            log.critical(f"config_file is not a file : {config_file}")
-            sys.exit(1)
+    fpath = ''
+    if type(config_file) is list:
+        for idx, file in enumerate(config_file):
+            log.info(f"Trying config_file location : {file}")
+            if os.path.exists(file):
+                fpath = file
     else:
-        log.critical(f"config_file does not exist : {config_file}")
+        log.info(f"Trying config_file location : {config_file}")
+        if os.path.exists(config_file):
+            fpath = config_file
+
+    if fpath == '':
+        log.critical(f"No config file found")
+        sys.exit(1)
+
+    script_content = runpy.run_path(fpath)
+    if "config" in script_content:
+        config = script_content['config']
+        log.info(f"Using config_file : {fpath}")
+        return config
+    else:
+        log.critical(f"Config_file incorrect (no 'config' variable inside) : {fpath}")
         sys.exit(1)
 
 
