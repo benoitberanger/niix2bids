@@ -42,7 +42,9 @@ def init_logger(out_dir: str, write_file: bool) -> None:
 
     # same thing but for a file handler
     if write_file:
-        logfile = os.path.join(out_dir, "log_" + datetime.now().strftime('%Y-%m-%d_%Hh%Sm%S') + ".txt")
+        upperstack = inspect.stack()[1]
+        mdl_name = inspect.getmodule(upperstack[0]).__name__.split('.')[0]  # get module name of the module calling
+        logfile = os.path.join(out_dir, datetime.now().strftime('%Y-%m-%d_%Hh%Sm%S') + "_" + mdl_name + ".log")
 
         fileHandeler = logging.FileHandler(logfile)
         fileHandeler.setLevel(logging.DEBUG)
