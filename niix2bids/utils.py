@@ -21,11 +21,7 @@ from niix2bids.classes import Volume
 
 
 ########################################################################################################################
-def init_logger(out_dir: str, write_file: bool) -> None:
-
-    # create output dir id needed
-    if not os.path.exists(out_dir):
-        os.mkdir(out_dir)
+def init_logger(write_file: bool, out_dir: str) -> None:
 
     # create logger
     log = logging.getLogger()
