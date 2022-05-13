@@ -597,6 +597,7 @@ def run(volume_list: List[Volume], config: list) -> pandas.DataFrame:
 
     # eliminate sequences with missing parameters, we cannot parse them
     df = df[ df['PulseSequenceDetails'].isna() == False ]  # this is the basic sequence name : %SiemensSeq%_gre
+    df = df[ df['SequenceName'        ].isna() == False ]  # 'fl3d12r_ns'
     df = df[ df['MRAcquisitionType'   ].isna() == False ]  # '2D', '3D'
 
     # checks
