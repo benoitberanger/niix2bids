@@ -609,7 +609,7 @@ def run(volume_list: List[Volume], config: list) -> pandas.DataFrame:
     # make some extraction / conversion
 
     # %CustomerSeq%_cmrr_mbep2d_bold -> cmrr_mbep2d_bold
-    df['PulseSequenceName'] = df['PulseSequenceDetails'].apply(lambda s: s.rsplit("%_")[1])
+    df['PulseSequenceName'] = df['PulseSequenceDetails'].apply(lambda s: s.rsplit("%_")[1] if s.find("%_")>0 else s)
 
     # [ORIGINAL, PRIMARY, M, ND, MOSAIC] -> ORIGINAL_PRIMARY_M_ND_MOSAIC
     df['ImageTypeStr'] = df['ImageType'].apply(lambda s: '_'.join(s))
