@@ -638,6 +638,7 @@ def run(volume_list: List[Volume], config: list) -> pandas.DataFrame:
     for sub_name, df_subject in df_by_subject:
         sub_name_clean = utils.clean_name(sub_name)
 
+        # also, we split each identical subject group by exam ID, so we can generate ses-<> field
         df_subject_by_ses = df_subject.groupby('StudyInstanceUID')
 
         ses = 0
@@ -651,7 +652,7 @@ def run(volume_list: List[Volume], config: list) -> pandas.DataFrame:
                 if seqinfo.empty: continue          # just to run the code faster
 
                 func = eval(fcn_name)               # fetch the name of the prog_ to call dynamically
-                func(seqinfo, sub_name_clean, ses)  # execute the prog_
+                func(seqinfo, sub_name_clean, ses)  # execute the prog_*
 
     # deal with unknown sequences
     prog_UNKNOWN(df)
