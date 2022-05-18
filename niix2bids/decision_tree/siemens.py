@@ -12,7 +12,7 @@ from niix2bids.utils import get_logger
 
 
 ########################################################################################################################
-def prog_mprage(seqinfo: pandas.DataFrame, sub_name: str) -> None:
+def prog_mprage(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
 
     # keep 3D
     seqinfo = utils.keep_ndim(seqinfo, '3D')
@@ -62,6 +62,7 @@ def prog_mprage(seqinfo: pandas.DataFrame, sub_name: str) -> None:
             for row_idx, seq in series.iterrows():
                 run_idx += 1
                 vol                   = seq['Volume']
+                vol.ses               = ses
                 vol.tag               = 'anat'
                 vol.suffix            = suffix
                 vol.sub               = sub_name
@@ -90,6 +91,7 @@ def prog_mprage(seqinfo: pandas.DataFrame, sub_name: str) -> None:
         for row_idx, seq in series.iterrows():
             run_idx += 1
             vol                   = seq['Volume']
+            vol.ses               = ses
             vol.tag               = 'anat'
             vol.suffix            = 'T1w'
             vol.sub               = sub_name
@@ -99,7 +101,7 @@ def prog_mprage(seqinfo: pandas.DataFrame, sub_name: str) -> None:
 
 
 ########################################################################################################################
-def prog_tse_vfl(seqinfo: pandas.DataFrame, sub_name: str) -> None:
+def prog_tse_vfl(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
 
     # keep 3D
     seqinfo = utils.keep_ndim(seqinfo, '3D')
@@ -127,6 +129,7 @@ def prog_tse_vfl(seqinfo: pandas.DataFrame, sub_name: str) -> None:
         for row_idx, seq in series.iterrows():
             run_idx += 1
             vol                   = seq['Volume']
+            vol.ses               = ses
             vol.tag               = 'anat'
             vol.suffix            = 'T2w'
             vol.sub               = sub_name
@@ -154,6 +157,7 @@ def prog_tse_vfl(seqinfo: pandas.DataFrame, sub_name: str) -> None:
         for row_idx, seq in series.iterrows():
             run_idx += 1
             vol                   = seq['Volume']
+            vol.ses               = ses
             vol.tag               = 'anat'
             vol.suffix            = 'FLAIR'
             vol.sub               = sub_name
@@ -163,7 +167,7 @@ def prog_tse_vfl(seqinfo: pandas.DataFrame, sub_name: str) -> None:
 
 
 ########################################################################################################################
-def prog_diff(seqinfo: pandas.DataFrame, sub_name: str) -> None:
+def prog_diff(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
 
     # keep 2D acquistion type
     seqinfo = utils.keep_ndim(seqinfo, '2D')
@@ -199,6 +203,7 @@ def prog_diff(seqinfo: pandas.DataFrame, sub_name: str) -> None:
         for row_idx, seq in series.iterrows():
             run_idx += 1
             vol                   = seq['Volume']
+            vol.ses               = ses
             vol.tag               = 'dwi'
             vol.suffix            = 'sbref'
             vol.sub               = sub_name
@@ -236,6 +241,7 @@ def prog_diff(seqinfo: pandas.DataFrame, sub_name: str) -> None:
         for row_idx, seq in series.iterrows():
             run_idx += 1
             vol                   = seq['Volume']
+            vol.ses               = ses
             vol.tag               = 'dwi'
             vol.suffix            = 'dwi'
             vol.sub               = sub_name
@@ -254,7 +260,7 @@ def prog_diff(seqinfo: pandas.DataFrame, sub_name: str) -> None:
 
 
 ########################################################################################################################
-def prog_bold(seqinfo: pandas.DataFrame, sub_name: str) -> None:
+def prog_bold(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
 
     # keep 2D acquistion type
     seqinfo = utils.keep_ndim(seqinfo, '2D')
@@ -283,13 +289,14 @@ def prog_bold(seqinfo: pandas.DataFrame, sub_name: str) -> None:
         run_idx = 0
         for row_idx, seq in series.iterrows():
             run_idx += 1
-            vol                    = seq['Volume']
-            vol.tag                = 'func'
-            vol.suffix             = 'sbref'
-            vol.sub                = sub_name
-            vol.bidsfields['task'] = task
-            vol.bidsfields['dir']  = dir
-            vol.bidsfields['run']  = run_idx
+            vol                     = seq['Volume']
+            vol.ses                 = ses
+            vol.tag                 = 'func'
+            vol.suffix              = 'sbref'
+            vol.sub                 = sub_name
+            vol.bidsfields['task']  = task
+            vol.bidsfields['dir']   = dir
+            vol.bidsfields['run']   = run_idx
             if echo > 0 : vol.bidsfields['echo']  = echo
             vol.bidsfields['part']  = part
             seqinfo = seqinfo.drop(row_idx)  # !! important : drop series that we flagged as SBRef !!
@@ -326,6 +333,7 @@ def prog_bold(seqinfo: pandas.DataFrame, sub_name: str) -> None:
         for _, seq in series.iterrows():
             run_idx += 1
             vol                    = seq['Volume']
+            vol.ses                = ses
             vol.tag                = 'func'
             vol.suffix             = 'bold'
             vol.sub                = sub_name
@@ -337,7 +345,7 @@ def prog_bold(seqinfo: pandas.DataFrame, sub_name: str) -> None:
 
 
 ########################################################################################################################
-def prog_fmap(seqinfo: pandas.DataFrame, sub_name: str) -> None:
+def prog_fmap(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
 
     # keep 2D
     seqinfo = utils.keep_ndim(seqinfo, '2D')
@@ -364,6 +372,7 @@ def prog_fmap(seqinfo: pandas.DataFrame, sub_name: str) -> None:
         for row_idx, seq in series.iterrows():
             run_idx += 1
             vol                   = seq['Volume']
+            vol.ses               = ses
             vol.tag               = 'fmap'
             vol.suffix            = f"magnitude{int(seq['EchoNumber'])}"  # suffix has to be _magnitude1 _magnitude2
             vol.sub               = sub_name
@@ -390,6 +399,7 @@ def prog_fmap(seqinfo: pandas.DataFrame, sub_name: str) -> None:
         for row_idx, seq in series.iterrows():
             run_idx += 1
             vol                   = seq['Volume']
+            vol.ses               = ses
             vol.tag               = 'fmap'
             vol.suffix            = 'phasediff'
             vol.sub               = sub_name
@@ -398,7 +408,7 @@ def prog_fmap(seqinfo: pandas.DataFrame, sub_name: str) -> None:
 
 
 ########################################################################################################################
-def prog_gre(seqinfo: pandas.DataFrame, sub_name: str) -> None:
+def prog_gre(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
 
     # build groups of parameters
     columns = ['SeriesDescription', 'ImageTypeStr']
@@ -419,6 +429,7 @@ def prog_gre(seqinfo: pandas.DataFrame, sub_name: str) -> None:
         for _, seq in series.iterrows():
             run_idx += 1
             vol                   = seq['Volume']
+            vol.ses               = ses
             vol.tag               = 'anat'
             vol.sub               = sub_name
             vol.bidsfields['acq'] = acq
@@ -433,7 +444,7 @@ def prog_gre(seqinfo: pandas.DataFrame, sub_name: str) -> None:
 
 
 ########################################################################################################################
-def prog_tse(seqinfo: pandas.DataFrame, sub_name: str) -> None:
+def prog_tse(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
 
     seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.*tse')
     seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.*tir')
@@ -458,6 +469,7 @@ def prog_tse(seqinfo: pandas.DataFrame, sub_name: str) -> None:
         for row_idx, seq in series.iterrows():
             run_idx += 1
             vol                   = seq['Volume']
+            vol.ses               = ses
             vol.tag               = 'anat'
             vol.suffix            = 'T2w'
             vol.sub               = sub_name
@@ -485,6 +497,7 @@ def prog_tse(seqinfo: pandas.DataFrame, sub_name: str) -> None:
         for row_idx, seq in series.iterrows():
             run_idx += 1
             vol                   = seq['Volume']
+            vol.ses               = ses
             vol.tag               = 'anat'
             vol.suffix            = 'FLAIR'
             vol.sub               = sub_name
@@ -494,7 +507,7 @@ def prog_tse(seqinfo: pandas.DataFrame, sub_name: str) -> None:
 
 
 ########################################################################################################################
-def prog_ep2d_se(seqinfo: pandas.DataFrame, sub_name: str) -> None:
+def prog_ep2d_se(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
 
     # keep 2D
     seqinfo = utils.keep_ndim(seqinfo, '2D')
@@ -524,6 +537,7 @@ def prog_ep2d_se(seqinfo: pandas.DataFrame, sub_name: str) -> None:
         for _, seq in series.iterrows():
             run_idx += 1
             vol                    = seq['Volume']
+            vol.ses                = ses
             vol.tag                = 'fmap'
             vol.suffix             = 'epi'
             vol.sub                = sub_name
@@ -533,7 +547,7 @@ def prog_ep2d_se(seqinfo: pandas.DataFrame, sub_name: str) -> None:
 
 
 ########################################################################################################################
-def prog_DISCARD(seqinfo: pandas.DataFrame, sub_name: str) -> None:
+def prog_DISCARD(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
 
     # build groups of parameters
     columns = ['SeriesDescription']
@@ -551,6 +565,7 @@ def prog_DISCARD(seqinfo: pandas.DataFrame, sub_name: str) -> None:
         for _, seq in series.iterrows():
             run_idx += 1
             vol                    = seq['Volume']
+            vol.ses                = ses
             vol.tag                = 'DISCARD'
             vol.suffix             = ''
             vol.sub                = sub_name
@@ -620,16 +635,23 @@ def run(volume_list: List[Volume], config: list) -> pandas.DataFrame:
     df_by_subject = df.groupby('PatientName')
 
     # call each routine depending on the sequence name
-    for sub_name, df_subject in df_by_subject:  # loop over subjects
+    for sub_name, df_subject in df_by_subject:
         sub_name_clean = utils.clean_name(sub_name)
-        for seq_regex, fcn_name in config:      # loop over sequence decision tree
 
-            # get list of corresponding sequence
-            seqinfo = utils.slice_with_genericfield(df_subject, 'PulseSequenceName', seq_regex)
-            if seqinfo.empty: continue          # just to run the code faster
+        df_subject_by_ses = df_subject.groupby('StudyInstanceUID')
 
-            func = eval(fcn_name)               # fetch the name of the prog_ to call dynamically
-            func(seqinfo, sub_name_clean)       # execute the prog_
+        ses = 0
+        for _, df_by_sess in df_subject_by_ses:
+            ses += 1
+            
+            for seq_regex, fcn_name in config:      # loop over sequence decision tree
+    
+                # get list of corresponding sequence
+                seqinfo = utils.slice_with_genericfield(df_by_sess, 'PulseSequenceName', seq_regex)
+                if seqinfo.empty: continue          # just to run the code faster
+
+                func = eval(fcn_name)               # fetch the name of the prog_ to call dynamically
+                func(seqinfo, sub_name_clean, ses)  # execute the prog_
 
     # deal with unknown sequences
     prog_UNKNOWN(df)

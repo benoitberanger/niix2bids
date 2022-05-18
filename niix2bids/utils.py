@@ -200,9 +200,11 @@ def assemble_bids_name(vol: Volume) -> str:
         bidsfields += '_' + key + '-' + str(value)
 
     if len(vol.suffix) > 0:
-        name = 'sub-' + vol.sub + bidsfields + '_' + vol.suffix
+        # name = 'sub-' + vol.sub + bidsfields + '_' + vol.suffix
+        name = f"sub-{vol.sub}_ses-{vol.ses}{bidsfields}_{vol.suffix}"
     else:
-        name = 'sub-' + vol.sub + bidsfields
+        # name = 'sub-' + vol.sub + bidsfields
+        name = f"sub-{vol.sub}{bidsfields}"
 
     return name
 
@@ -257,7 +259,8 @@ def apply_bids_architecture(out_dir: str, volume_list: List[Volume], symlink_or_
             else:
                 dir_path = os.path.join(
                     out_dir,
-                    "sub-" + vol.sub,
+                    f"sub-{vol.sub}",
+                    f"ses-{vol.ses}",
                     vol.tag)
 
             # recursive directory creation, and do not raise error if already exists
@@ -372,6 +375,6 @@ def write_bids_other_files(out_dir: str) -> None:
 
     # .bidsignore
     with open(os.path.join(out_dir, '.bidsignore'), 'w') as fp:
-        fp.write('log_* \n')
+        fp.write('*.log \n')
         fp.write('UNKNOWN \n')
         fp.write('DISCARD \n')

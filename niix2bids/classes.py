@@ -67,6 +67,7 @@ class Volume:
         self.bidsfields       = {}             # all bids fields, such as acq-<>_run-<>
         self.tag              = ''             # modality, such as anat, dwi, bold, fmap
         self.sub              = ''             # subject name, such as sub-<>
+        self.ses              = ''             # session number, such as sess-<>
         self.suffix           = ''             # suffix, such as T1w, bold, sbref
 
         # store a list of all instances
