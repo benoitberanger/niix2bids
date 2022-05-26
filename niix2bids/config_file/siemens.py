@@ -15,7 +15,7 @@ product = [
 wip = [
     ['.*mp2rage.*'          , 'prog_mprage' ],  # mp2rage WIP
     ["ep2d_stejskal_386"    , "prog_diff"   ],  # diffusion WIP
-    ["cstfl_wip925b"        , "prog_mprage" ],  # compressed sensing mprage & mp2rage
+    [".*wip925.*"           , "prog_mprage" ],  # compressed sensing mprage & mp2rage
 ]
 
 c2p = [
