@@ -28,7 +28,9 @@ def init_logger(write_file: bool, out_dir: str) -> None:
     log.setLevel(logging.DEBUG)
 
     # create formatter
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter(
+        fmt='%(asctime)s - %(name)-55s - %(levelname)-8s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S')
 
     # create console handler
     consoleHandler = logging.StreamHandler()  # create
