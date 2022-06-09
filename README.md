@@ -41,7 +41,7 @@ Optional arguments:
                         located in [niix2bids]/config_file/siemens.py
   -v, --version         show program's version number and exit
 
-niix2bids_version==v1.2.0 + bids_version==v1.6.0
+niix2bids_version==v2.1.0 + bids_version==v1.6.0
 ```
 
 ## Limitations
@@ -62,6 +62,7 @@ niix2bids_version==v1.2.0 + bids_version==v1.6.0
 `python >= 3.6` Tested on `3.6` & `3.9`
 
 #### Package dependencies
+- `setuptools`
 - `pandas`
 - `nibabel`
 
@@ -77,7 +78,6 @@ Use [conda](https://docs.conda.io/en/latest/miniconda.html) to create a new pyth
 ```
 conda create --name niix2bids_python3.9 # python3.9 runs faster than 3.6
 conda activate niix2bids_python3.9
-conda install pip # to make sure to have a version in the env
 pip install git+https://github.com/benoitberanger/niix2bids
 ```
 
@@ -90,7 +90,6 @@ cd /path/to/mydir/
 git clone https://github.com/benoitberanger/niix2bids
 conda create --name niix2bids_python3.9 # python3.9 runs faster than 3.6
 conda activate niix2bids_python3.9
-conda install pip # to make sure to have a version in the env
 pip install -e niix2bids/
 ```
 
@@ -103,8 +102,5 @@ If you want to make a PR, this the recommended strategy, because you can control
 The installation might crash because of wrong dependencies' management. Check [Known issues](https://github.com/benoitberanger/niix2bids#known-issues) section.
 
 ## Known issues
-
-Weird things happened to me at installation due to outdated version of `setuptools`, a packages bundled with `pip`.  
-When I create a new python environment, I never had problem.
 
 `pip install niix2bids` is not possible yet. I did not register this packaged on https://pypi.org.
