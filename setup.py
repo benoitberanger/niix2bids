@@ -5,7 +5,7 @@ with open('niix2bids/metadata.py', 'r') as fp:
     __version__ = line.split()[2].strip("'")  # extract version number
 
 with open('README.md', 'r') as f:
-    long_description = f.readlines()
+    long_description = f.read()
 
 setuptools.setup(
     name="niix2bids",
@@ -28,11 +28,11 @@ setuptools.setup(
             'niix2bids = niix2bids.cli:main'
         ]
     },
-    classifiers=(
+    classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GLP3",
         "Operating System :: OS Independent",
-    ),
+    ],
     keywords='MRI BIDS',
     zip_safe=False
 )
