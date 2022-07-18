@@ -190,8 +190,18 @@ def create_volume_list(file_list_nii: List[str]) -> List[Volume]:
 @logit('Read all .json files. This step might take time, it involves reading lots of files', logging.INFO)
 def read_all_json(volume_list: List[Volume]) -> None:
 
+    log = get_logger()
+
+    to_pop = []
     for volume in volume_list:
-        volume.load_json()
+        try:
+            volume.load_json()
+        except json.JSONDecodeError:
+            log.critical(f"json have bad syntax : {volume.json.path}")
+            to_pop.append(volume)
+
+    # remove the Volume object for the instance list, so it will be "forgotten"
+    [Volume.instances.remove(elem) for elem in to_pop]
 
 
 ########################################################################################################################
