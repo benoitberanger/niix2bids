@@ -2,8 +2,8 @@
 from typing import List  # for function signature
 
 # dependency modules
-import pandas   # for DataFrame
-import nibabel  # to load nifti header
+import pandas as pd # for DataFrame
+import nibabel      # to load nifti header
 
 # local modules
 from niix2bids.decision_tree import utils
@@ -12,7 +12,7 @@ from niix2bids.utils import get_logger
 
 
 ########################################################################################################################
-def prog_mprage(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
+def prog_mprage(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
 
     # keep 3D
     seqinfo = utils.keep_ndim(seqinfo, '3D')
@@ -28,7 +28,7 @@ def prog_mprage(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
     if not seqinfo_pha.empty:
         log = get_logger()
         log.warning(f"mp(2)rage part-phase not coded yet. Be careful !")
-    seqinfo = pandas.concat([seqinfo_mag, seqinfo_T1map])
+    seqinfo = pd.concat([seqinfo_mag, seqinfo_T1map])
 
     # ------------------------------------------------------------------------------------------------------------------
     # in case of mp2rage, there are 3 (or 4 wih T1map) images generated
@@ -101,7 +101,7 @@ def prog_mprage(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
 
 
 ########################################################################################################################
-def prog_tse_vfl(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
+def prog_tse_vfl(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
 
     # keep 3D
     seqinfo = utils.keep_ndim(seqinfo, '3D')
@@ -167,7 +167,7 @@ def prog_tse_vfl(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
 
 
 ########################################################################################################################
-def prog_diff(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
+def prog_diff(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
 
     # keep 2D acquistion type
     seqinfo = utils.keep_ndim(seqinfo, '2D')
@@ -260,7 +260,7 @@ def prog_diff(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
 
 
 ########################################################################################################################
-def prog_bold(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
+def prog_bold(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
 
     # keep 2D acquistion type
     seqinfo = utils.keep_ndim(seqinfo, '2D')
@@ -345,7 +345,7 @@ def prog_bold(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
 
 
 ########################################################################################################################
-def prog_fmap(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
+def prog_fmap(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
 
     # keep 2D
     seqinfo = utils.keep_ndim(seqinfo, '2D')
@@ -408,7 +408,7 @@ def prog_fmap(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
 
 
 ########################################################################################################################
-def prog_gre(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
+def prog_gre(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
 
     # build groups of parameters
     columns = ['SeriesDescription', 'ImageTypeStr']
@@ -444,7 +444,7 @@ def prog_gre(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
 
 
 ########################################################################################################################
-def prog_tse(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
+def prog_tse(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
 
     seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.*tse')
     seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.*tir')
@@ -507,7 +507,7 @@ def prog_tse(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
 
 
 ########################################################################################################################
-def prog_ep2d_se(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
+def prog_ep2d_se(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
 
     # keep 2D
     seqinfo = utils.keep_ndim(seqinfo, '2D')
@@ -547,7 +547,7 @@ def prog_ep2d_se(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
 
 
 ########################################################################################################################
-def prog_DISCARD(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
+def prog_DISCARD(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
 
     # build groups of parameters
     columns = ['SeriesDescription']
@@ -575,7 +575,7 @@ def prog_DISCARD(seqinfo: pandas.DataFrame, sub_name: str, ses: int) -> None:
 
 
 ########################################################################################################################
-def prog_UNKNOWN(df: pandas.DataFrame) -> None:
+def prog_UNKNOWN(df: pd.DataFrame) -> None:
 
     for _, desc_grp in df.groupby('SeriesDescription'):
         run_idx = 0
@@ -598,7 +598,7 @@ def prog_UNKNOWN(df: pandas.DataFrame) -> None:
 
 
 ########################################################################################################################
-def run(volume_list: List[Volume], config: list) -> pandas.DataFrame:
+def run(volume_list: List[Volume], config: list) -> pd.DataFrame:
 
     log = get_logger()
 
@@ -606,22 +606,14 @@ def run(volume_list: List[Volume], config: list) -> pandas.DataFrame:
 
     list_param = utils.assemble_list_param(volume_list)
 
-    # conversion of List[dict] to pandas.DataFrame
-    # to pandas.DataFrame object is like table in matlab, with much more embedded methods
-    df = pandas.DataFrame(list_param)
+    # conversion of List[dict] to pd.DataFrame
+    # pd.DataFrame object is like table in matlab, with much more embedded methods
+    df = pd.DataFrame(list_param)
 
-    # eliminate sequences with missing parameters, we cannot parse them
-    df = df[ df['PulseSequenceDetails'].isna() == False ]  # this is the basic sequence name : %SiemensSeq%_gre
-    df = df[ df['SequenceName'        ].isna() == False ]  # 'fl3d12r_ns'
-    df = df[ df['MRAcquisitionType'   ].isna() == False ]  # '2D', '3D'
+    # do all sanity checks
+    df = utils.sanity_check(df)
 
-    # checks
-    utils.assert_is_dcm2niix(df)
-    utils.assert_has_patientname(df)
-    utils.assert_key_val(df, "Modality"    , "MR"     )
-    utils.assert_key_val(df, "Manufacturer", "Siemens")
-
-    # make some extraction / conversion
+    # make some extraction / conversion --------------------------------------------------------------------------------
 
     # %CustomerSeq%_cmrr_mbep2d_bold -> cmrr_mbep2d_bold
     df['PulseSequenceName'] = df['PulseSequenceDetails'].apply(lambda s: s.rsplit("%_")[1] if s.find("%_")>0 else s)
