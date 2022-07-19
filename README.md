@@ -1,14 +1,28 @@
 # niix2bids
 
-
 Automatic BIDS architecture. Convert your DICOM with [dcm2niix](https://github.com/rordenlab/dcm2niix), 
 then use this package as a command line to organize your dataset into [BIDS](https://bids.neuroimaging.io/).
 
+
 ## Background
 
-[BIDS](https://bids.neuroimaging.io/) is widely used for sharing neuroimaging datasets. In particular *nifti* files.
-There are several packages that have a semi-automatic approach to organize datasets to BIDS, such as [Dcm2Bids](https://github.com/UNFmontreal/Dcm2Bids)
-However the objective here is to be 100% automatic.
+[BIDS](https://bids.neuroimaging.io/) is widely used for sharing neuroimaging datasets.
+There are several packages that have a semi-automatic approach to organize datasets to BIDS, such as [Dcm2Bids](https://github.com/UNFmontreal/Dcm2Bids).
+To transform one or a few cohorts from dicom or nifti to BIDS, I would use [Dcm2Bids](https://github.com/UNFmontreal/Dcm2Bids).
+
+However, for a more automatic approach with no prior on the input directory structure and file names,
+[niix2bids](https://github.com/benoitberanger/niix2bids) can be better.
+This should be the case for MRI centers that have lots of cohorts from different research protocol.
+It may also be useful for clinical data with wide variations in naming conventions and parameters.
+
+
+## Limitations
+
+- Only works with:
+  - MRI data
+  - Siemens magnets
+  - DICOM converted using [dcm2niix](https://github.com/rordenlab/dcm2niix)
+- `PatientName` **must** be in the JSON file. Use [dcm2niix](https://github.com/rordenlab/dcm2niix) with option `-ba n` to **disable** anonymization.
 
 
 ## Usage
@@ -44,14 +58,6 @@ Optional arguments:
 niix2bids_version==v2.2.0 + bids_version==v1.6.0
 ```
 
-## Limitations
-
-- Only works with:
-  - MRI data
-  - Siemens magnets
-  - DICOM converted using [dcm2niix](https://github.com/rordenlab/dcm2niix)
-- `PatientName` **must** be in the JSON file. Use [dcm2niix](https://github.com/rordenlab/dcm2niix) with option `-ba n` to **disable** anonymization
-
 
 ## Installation
 
@@ -59,11 +65,11 @@ niix2bids_version==v2.2.0 + bids_version==v1.6.0
 
 #### Python version
 
-`python >= 3.6` Tested on `3.6` & `3.9`
+`python >= 3.6` Tested on `3.6`, `3.9`, `3.10`
 
 #### Package dependencies
-- `pandas`
-- `nibabel`
+- `pandas` for [DataFrame](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html)
+- `nibabel` to [load](https://nipy.org/nibabel/gettingstarted.html) the nifti file header
 
 
 ### How to
@@ -75,9 +81,8 @@ Use [conda](https://docs.conda.io/en/latest/miniconda.html) to create a new pyth
 **Standard**
 
 ```
-conda create --name niix2bids_python3.9 # python3.9 runs faster than 3.6
-conda activate niix2bids_python3.9
-conda install pip # to make sure to have a version in the env
+conda create --name niix2bids
+conda activate niix2bids
 pip install git+https://github.com/benoitberanger/niix2bids
 ```
 
@@ -88,23 +93,23 @@ If you want to install in "developer" mode using the Git local repository, clone
 ```
 cd /path/to/mydir/
 git clone https://github.com/benoitberanger/niix2bids
-conda create --name niix2bids_python3.9 # python3.9 runs faster than 3.6
-conda activate niix2bids_python3.9
-conda install pip # to make sure to have a version in the env
+conda create --name niix2bids
+conda activate niix2bids
 pip install -e niix2bids/
 ```
 
 If you want to make a PR, this the recommended strategy, because you can control branching in your local clone of the repository
 
 
-#### **NOT** recommended installation procedure
+**NOT tested**
 
 `pip install git+https://github.com/benoitberanger/niix2bids`  
-The installation might crash because of wrong dependencies' management. Check [Known issues](https://github.com/benoitberanger/niix2bids#known-issues) section.
+The installation might crash because of wrong dependency management.
+Creating a fresh [conda](https://docs.conda.io/en/latest/miniconda.html) environment is the recommended setup.
+See above.
 
-## Known issues
 
-Weird things happened to me at installation due to outdated version of `setuptools`, a packages bundled with `pip`.  
-When I create a new python environment, I never had problem.
+## Notes
 
-`pip install niix2bids` is not possible yet. I did not register this packaged on https://pypi.org.
+`pip install niix2bids` is not possible yet.
+I did not register this packaged on https://pypi.org.
