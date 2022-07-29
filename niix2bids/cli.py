@@ -63,27 +63,29 @@ def get_parser() -> argparse.ArgumentParser:
                           metavar='DIR',
                           required=True)
 
-    optional.add_argument("--symlink",
+    exclus_1 = optional.add_mutually_exclusive_group()
+    exclus_1.add_argument("--symlink",
                           help="Use symlink (default). The out_dir will contain symlinks, saving disk spaces",
                           dest="symlink_or_copyfile",
                           action="store_const",
                           const="symlink")
-    optional.add_argument("--copyfile",
+    exclus_1.add_argument("--copyfile",
                           help="Use copyfile. Original files will be copied in out_dir. !! be careful of disk space !!",
                           dest="symlink_or_copyfile",
                           action="store_const",
                           const="copyfile")
-    optional.set_defaults(symlink_or_copyfile="symlink")
+    exclus_1.set_defaults(symlink_or_copyfile="symlink")
 
-    optional.add_argument("--logfile",
+    exclus_2 = optional.add_mutually_exclusive_group()
+    exclus_2.add_argument("--logfile",
                           help="Write logfile (default)",
                           dest="logfile",
                           action="store_true")
-    optional.add_argument("--no-logfile",
+    exclus_2.add_argument("--no-logfile",
                           help="Disable writing logfile",
                           dest="logfile",
                           action="store_false")
-    optional.set_defaults(logfile=True)
+    exclus_2.set_defaults(logfile=True)
 
     optional.add_argument("-c", "--config_file",
                           help=(
@@ -95,7 +97,6 @@ def get_parser() -> argparse.ArgumentParser:
                           ),
                           dest="config_file",
                           metavar='FILE',
-                          # default=os.path.join( niix2bids.__path__[0], 'config_file', 'siemens.py'))
                           default=[
                               os.path.join( os.path.expanduser('~'), 'niix2bids_config_file', 'siemens.py'),
                               os.path.join( niix2bids.__path__[0], 'config_file', 'siemens.py')

@@ -27,7 +27,7 @@ It may also be useful for clinical data with wide variations in naming conventio
 
 ## Usage
 ```
-usage: niix2bids [-h] -i DIR [DIR ...] -o DIR [--symlink] [--copyfile] [--logfile] [--no-logfile] [-c FILE] [-v]
+usage: niix2bids [-h] -i DIR [DIR ...] -o DIR [--symlink | --copyfile] [--logfile | --no-logfile] [-c FILE] [-v]
 
     Create BIDS architecture from nifti files and .json sidecars.
     This method expects DICOM converted by dcm2niix (https://github.com/rordenlab/dcm2niix)
