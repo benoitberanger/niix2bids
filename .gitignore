@@ -142,3 +142,13 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# OS generated files
+Thumbs.db
+desktop.ini
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
