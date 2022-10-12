@@ -47,7 +47,7 @@ def prog_mprage(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
             inv = ''
 
         # build groups of parameters
-        columns = ['SeriesDescription']
+        columns = 'SeriesDescription'
         groups = seqinfo_suffix.groupby(columns)
 
         # loop over groups
@@ -384,7 +384,7 @@ def prog_fmap(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
     seqinfo_pha = utils.slice_with_imagetype(seqinfo, 'P')
 
     # build groups of parameters
-    columns = ['SeriesDescription']
+    columns = 'SeriesDescription'
     groups = seqinfo_pha.groupby(columns)
 
     # loop over groups
@@ -550,7 +550,7 @@ def prog_ep2d_se(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
 def prog_DISCARD(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
 
     # build groups of parameters
-    columns = ['SeriesDescription']
+    columns = 'SeriesDescription'
     groups = seqinfo.groupby(columns)
 
     # loop over groups
