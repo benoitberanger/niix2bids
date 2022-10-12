@@ -446,7 +446,7 @@ def prog_gre(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
 ########################################################################################################################
 def prog_tse(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
 
-    seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.*tse')
+    seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.*t?se')
     seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.*tir')
 
     # ------------------------------------------------------------------------------------------------------------------
