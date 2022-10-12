@@ -22,32 +22,33 @@ def prog_mprage(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
     # "ImageType": ["ORIGINAL", "PRIMARY", "M"     , "ND", "NORM"], <--- inv2
     # "ImageType": ["DERIVED" , "PRIMARY", "T1 MAP", "ND"        ], <--- T1map
     # "ImageType": ["DERIVED" , "PRIMARY", "M"     , "ND", "UNI" ], <--- UNIT1
-    seqinfo_mag   = utils.slice_with_imagetype(seqinfo, 'M')
-    seqinfo_T1map = utils.slice_with_imagetype(seqinfo, 'T1 MAP')
-    seqinfo_pha   = utils.slice_with_imagetype(seqinfo, 'P')
-    if not seqinfo_pha.empty:
-        log = get_logger()
-        log.warning(f"mp(2)rage part-phase not coded yet. Be careful !")
-    seqinfo = pd.concat([seqinfo_mag, seqinfo_T1map])
+    seqinfo_mag    = utils.slice_with_imagetype(seqinfo, 'M')
+    seqinfo_T1map1 = utils.slice_with_imagetype(seqinfo, 'T1 MAP')  # Siemens mp2rage product
+    seqinfo_T1map2 = utils.slice_with_imagetype(seqinfo, 'T1')      # Siemens mp2rage WIP
+    seqinfo_pha    = utils.slice_with_imagetype(seqinfo, 'P')
+    seqinfo        = pd.concat([seqinfo_mag, seqinfo_pha, seqinfo_T1map1, seqinfo_T1map2])
 
     # ------------------------------------------------------------------------------------------------------------------
     # in case of mp2rage, there are 3 (or 4 wih T1map) images generated
     # the SeriesDescription is automatically generated such as ProtocolName + suffix, where suffix = _INV1, _INV2,
     # _UNI_Images (and _T1_Images)
-    descr_regex_list = ['.*_INV1$', '.*_INV2$', '.*_T1_Images$', '.*_UNI_Images$']
-    suffix_list      = ['MP2RAGE' ,  'MP2RAGE', 'T1map'        , 'UNIT1'         ]
-    for descr_regex in descr_regex_list:
+    descr_regex_list = ['.*_INV1$', '.*_INV2$', '.*_INV1_PHS$', '.*_INV2_PHS$', '.*_T1_Images$', '.*_UNI_Images$']
+    inv_number       = [1         , 2         , 1             , 2             , None           , None            ]
+    suffix_list      = ['MP2RAGE' ,  'MP2RAGE', 'MP2RAGE'     ,  'MP2RAGE'    , 'T1map'        , 'UNIT1'         ]
+    for idx, descr_regex in enumerate(descr_regex_list):
 
         seqinfo_suffix = utils.slice_with_genericfield(seqinfo, 'SeriesDescription', descr_regex)
 
-        suffix = suffix_list[descr_regex_list.index(descr_regex)]
+        suffix = suffix_list[idx]
         if suffix == 'MP2RAGE':
-            inv = descr_regex_list.index(descr_regex) + 1
+            inv  = inv_number[idx]
+            if len(seqinfo_suffix)>0: part = utils.get_mag_or_pha(seqinfo_suffix.iloc[0])
         else:
-            inv = ''
+            inv  = ''
+            part = ''
 
         # build groups of parameters
-        columns = 'SeriesDescription'
+        columns = ['SeriesDescription', 'ImageTypeStr']
         groups = seqinfo_suffix.groupby(columns)
 
         # loop over groups
@@ -68,7 +69,8 @@ def prog_mprage(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
                 vol.sub               = sub_name
                 vol.bidsfields['acq'] = acq
                 vol.bidsfields['run'] = run_idx
-                if bool(inv): vol.bidsfields['inv'] = inv
+                if bool(inv ): vol.bidsfields['inv' ] = inv
+                if bool(part): vol.bidsfields['part'] = part
                 seqinfo = seqinfo.drop(row_idx)  # !! important : drop series that we already flagged !!
 
     # ------------------------------------------------------------------------------------------------------------------
