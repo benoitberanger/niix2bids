@@ -24,6 +24,7 @@ c2p = [
     ["^icm_gre$"                   , "prog_gre"    ],  # ICM version of the GRE, with better phase reconstruction
     ["PtkSmsVB13ADwDualSpinEchoEpi", "prog_diff"   ],  # diffusion
     ["cubric_tfl_fatnavs"          , "prog_mprage" ],  # mp2rage with fatnav
+    ["dkd_tfl_brp"                 , "prog_mprage" ],  # mprage like
 ]
 
 # the "output" variable has to be called "config"
