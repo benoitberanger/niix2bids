@@ -106,8 +106,8 @@ def prog_tse_vfl(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
     # keep 3D
     seqinfo = utils.keep_ndim(seqinfo, '3D')
 
-    seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.spcR?'  )
-    seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.spcirR?')
+    seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.?spcR?'  )
+    seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.?spcirR?')
 
     # ------------------------------------------------------------------------------------------------------------------
     # T2w : 3DT2 SPACE
