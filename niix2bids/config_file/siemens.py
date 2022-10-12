@@ -17,6 +17,7 @@ wip = [
     ["ep2d_stejskal_386"           , "prog_diff"   ],  # diffusion WIP
     [".*wip925.*"                  , "prog_mprage" ],  # compressed sensing mprage & mp2rage
     ["PtkSmsVB13ADwDualSpinEchoEpi", "prog_diff"   ],  # diffusion WIP
+    ["tse_vfl_wipb15"              , "prog_tse_vfl"],  # 3D SPACE WIP
 ]
 
 c2p = [
