@@ -33,10 +33,10 @@ def init_logger(write_file: bool, out_dir: str) -> None:
         datefmt='%Y-%m-%d %H:%M:%S')
 
     # create console handler
-    consoleHandler = logging.StreamHandler()  # create
-    consoleHandler.setLevel(logging.DEBUG)    # and set level to debug
-    consoleHandler.setFormatter(formatter)    # add formatter handlers
-    log.addHandler(consoleHandler)            # add handlers to logger
+    consoleHandler = logging.StreamHandler(sys.stdout)  # create
+    consoleHandler.setLevel(logging.DEBUG)              # and set level to debug
+    consoleHandler.setFormatter(formatter)              # add formatter handlers
+    log.addHandler(consoleHandler)                      # add handlers to logger
 
     # same thing but for a file handler
     if write_file:
