@@ -37,7 +37,8 @@ def get_parser() -> argparse.ArgumentParser:
     epilog = f"niix2bids_version=={niix2bids_version} + bids_version=={bids_version}"
 
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description=description,
+    parser = argparse.ArgumentParser(prog='niix2bids',
+                                     description=description,
                                      epilog=epilog,
                                      formatter_class=argparse.RawTextHelpFormatter)
 
