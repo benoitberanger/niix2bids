@@ -12,6 +12,7 @@ import traceback                # to get the current function name
 import inspect                  # to get the current module name
 from typing import List, Tuple  # for function signature
 import runpy                    # to run config script
+import io                       # to save in a string the log output
 
 # dependency modules
 
@@ -21,7 +22,7 @@ from niix2bids.classes import Volume
 
 
 ########################################################################################################################
-def init_logger(write_file: bool, out_dir: str) -> None:
+def init_logger(write_file: bool, out_dir: str, store_report: bool = False) -> None:
 
     # create logger
     log = logging.getLogger()
@@ -32,11 +33,14 @@ def init_logger(write_file: bool, out_dir: str) -> None:
         fmt='%(asctime)s - %(name)-55s - %(levelname)-8s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S')
 
+    handler_base_name = 'niix2bids'
+
     # create console handler
-    consoleHandler = logging.StreamHandler(sys.stdout)  # create
-    consoleHandler.setLevel(logging.DEBUG)              # and set level to debug
-    consoleHandler.setFormatter(formatter)              # add formatter handlers
-    log.addHandler(consoleHandler)                      # add handlers to logger
+    consoleHandler = logging.StreamHandler(sys.stdout)
+    consoleHandler.set_name(f'{handler_base_name}_console')
+    consoleHandler.setLevel(logging.DEBUG)
+    consoleHandler.setFormatter(formatter)
+    log.addHandler(consoleHandler)
 
     # same thing but for a file handler
     if write_file:
@@ -45,9 +49,19 @@ def init_logger(write_file: bool, out_dir: str) -> None:
         logfile = os.path.join(out_dir, datetime.now().strftime('%Y-%m-%d_%Hh%Sm%S') + "_" + mdl_name + ".log")
 
         fileHandeler = logging.FileHandler(logfile)
+        fileHandeler.set_name(f'{handler_base_name}_file')
         fileHandeler.setLevel(logging.DEBUG)
         fileHandeler.setFormatter(formatter)
         log.addHandler(fileHandeler)
+
+    # store log into a string variable for later usage
+    if store_report:
+        report_stream = io.StringIO()
+        reportHandler = logging.StreamHandler(report_stream)
+        reportHandler.set_name(f'{handler_base_name}_report')
+        reportHandler.setLevel(logging.DEBUG)
+        reportHandler.setFormatter(formatter)
+        log.addHandler(reportHandler)
 
 
 ########################################################################################################################
