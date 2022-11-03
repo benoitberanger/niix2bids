@@ -17,12 +17,7 @@ def run(args: argparse.Namespace) -> None:
 
     star_time = time.time()
 
-    # create output dir id needed
-    if not os.path.exists(args.out_dir):
-        os.mkdir(args.out_dir)
-
-    # initialize logger (console & file)
-    utils.init_logger(args.logfile, args.out_dir)
+    # start logging stuff
     log = get_logger()
     log.info(f"niix2bids=={metadata.get_niix2bids_version()}")
 

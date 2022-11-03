@@ -121,5 +121,12 @@ def main() -> None:
     args = parser.parse_args()  # Parse
     args = format_args(args)    # Format args
 
+    # create output dir id needed
+    if not os.path.exists(args.out_dir):
+        os.makedirs(args.out_dir)
+
+    # initialize logger (console & file)
+    niix2bids.utils.init_logger(args.logfile, args.out_dir)
+
     # Call workflow
     niix2bids.workflow.run(args)
