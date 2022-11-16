@@ -218,7 +218,7 @@ def prog_diff(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
         nii = nibabel.load(seq['Volume'].nii.path)
         if nii.ndim < 4:  # check 4D
             seq['Volume'].reason_not_ready = 'non-4D dwi volume'
-            seq['Volume'].tag = 'DISCARD'
+            seq['Volume'].tag = 'NON_BIDS'
 
     # ------------------------------------------------------------------------------------------------------------------
     # and now the normal volume
@@ -258,7 +258,7 @@ def prog_diff(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
             if not has_bvec:
                 vol.reason_not_ready += '[ no .bvec file ]'
             if not has_bval or not has_bvec:
-                vol.tag = 'DISCARD'  # remove it => this serie will be discarded
+                vol.tag = 'NON_BIDS'  # remove it => this serie will be discarded
 
     # ------------------------------------------------------------------------------------------------------------------
     # treat non-original
@@ -282,7 +282,7 @@ def prog_diff(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
             vol = seq['Volume']
             vol.ses = ses
             vol.reason_not_ready = f"dwi non-ORIGINAL {str(seq['ImageType'])}"
-            vol.tag = 'DISCARD'
+            vol.tag = 'NON_BIDS'
             vol.suffix = 'dwi'
             vol.sub = sub_name
             vol.bidsfields['acq'] = acq
@@ -339,10 +339,10 @@ def prog_bold(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
         nii = nibabel.load( seq['Volume'].nii.path )
         if nii.ndim < 4:  # check 4D
             seq['Volume'].reason_not_ready = 'non-4D bold volume'
-            seq['Volume'].tag = 'DISCARD'
+            seq['Volume'].tag = 'NON_BIDS'
 
     # ------------------------------------------------------------------------------------------------------------------
-    # now that we already parsed SBRef and eliminated non-4D volumes, we can continue with the "normal" bold volumes
+    # now that we already parsed SBRef and flagged non-4D volumes, we can continue with the "normal" bold volumes
 
     # build groups of parameters
     columns = ['SeriesDescription', 'PhaseEncodingDirection', 'ImageTypeStr']

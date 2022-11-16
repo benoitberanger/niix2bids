@@ -226,11 +226,12 @@ def assemble_bids_name(vol: Volume) -> str:
         bidsfields += '_' + key + '-' + str(value)
 
     if len(vol.suffix) > 0:
-        # name = 'sub-' + vol.sub + bidsfields + '_' + vol.suffix
         name = f"sub-{vol.sub}_ses-{vol.ses}{bidsfields}_{vol.suffix}"
     else:
-        # name = 'sub-' + vol.sub + bidsfields
         name = f"sub-{vol.sub}{bidsfields}"
+
+    if len(vol.reason_not_ready) > 0:
+        name += f'__{vol.tag}__{re.sub("[^A-Za-z0-9_]+","_",vol.reason_not_ready)}'
 
     return name
 
@@ -261,9 +262,10 @@ def apply_bids_architecture(out_dir: str, volume_list: List[Volume], symlink_or_
 
     log                       = get_logger()
     log_info                  = []
-    log_info_discard          = []
+    log_discard               = []
+    log_non_bids              = []
     log_warning               = []
-    log_warning_unknown       = []
+    log_unknown               = []
     log_error_not_interpreted = []
 
     for vol in volume_list:
@@ -274,13 +276,19 @@ def apply_bids_architecture(out_dir: str, volume_list: List[Volume], symlink_or_
                 dir_path = os.path.join(
                     out_dir,
                     'DISCARD')
-                log_info_discard.append(f'{vol.reason_not_ready} : {vol.nii.path}')
+                log_discard.append(f'{vol.reason_not_ready} : {vol.nii.path}')
+
+            elif vol.tag == 'NON_BIDS':
+                dir_path = os.path.join(
+                    out_dir,
+                    'NON_BIDS')
+                log_non_bids.append(f'{vol.reason_not_ready} : {vol.nii.path}')
 
             elif vol.tag == 'UNKNOWN':
                 dir_path = os.path.join(
                     out_dir,
                     'UNKNOWN')
-                log_warning_unknown.append(f'{vol.reason_not_ready} : {vol.nii.path}')
+                log_unknown.append(f'{vol.reason_not_ready} : {vol.nii.path}')
 
             else:
                 dir_path = os.path.join(
@@ -346,19 +354,22 @@ def apply_bids_architecture(out_dir: str, volume_list: List[Volume], symlink_or_
 
     # just sort them so it's easier to read
     log_error_not_interpreted.sort()
-    log_warning_unknown.sort()
+    log_unknown.sort()
     log_warning.sort()
-    log_info_discard.sort()
+    log_discard.sort()
+    log_non_bids.sort()
     log_info.sort()
 
     # print them all, but in order
     for msg in log_error_not_interpreted:
         log.error(msg)
-    for msg in log_warning_unknown:
+    for msg in log_unknown:
         log.warning(msg)
     for msg in log_warning:
         log.warning(msg)
-    for msg in log_info_discard:
+    for msg in log_non_bids:
+        log.warning(msg)
+    for msg in log_discard:
         log.warning(msg)
     for msg in log_info:
         log.info(msg)
