@@ -177,9 +177,6 @@ def prog_diff(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
     # keep ORIGINAL images, discard ADC, FA, ColFA, ...
     seqinfo_original = utils.slice_with_imagetype_original(seqinfo)
     seqinfo_discard = seqinfo.drop(seqinfo_original.index)
-    for row_idx, seq in seqinfo_discard.iterrows():
-        vol                   = seq['Volume']
-        vol.reason_not_ready  = f"dwi non-ORIGINAL {str(seq['ImageType'])}"
     seqinfo = seqinfo_original
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -221,7 +218,7 @@ def prog_diff(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
         nii = nibabel.load(seq['Volume'].nii.path)
         if nii.ndim < 4:  # check 4D
             seq['Volume'].reason_not_ready = 'non-4D dwi volume'
-            seqinfo = seqinfo.drop(row_idx)
+            seq['Volume'].tag = 'DISCARD'
 
     # ------------------------------------------------------------------------------------------------------------------
     # and now the normal volume
@@ -244,7 +241,10 @@ def prog_diff(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
             run_idx += 1
             vol                   = seq['Volume']
             vol.ses               = ses
-            vol.tag               = 'dwi'
+            if len(vol.tag) == 0:
+                vol.tag           = 'dwi'
+            else:
+                pass  # because it's a 'DISCARD' from 'non-4D'
             vol.suffix            = 'dwi'
             vol.sub               = sub_name
             vol.bidsfields['acq'] = acq
@@ -258,13 +258,42 @@ def prog_diff(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
             if not has_bvec:
                 vol.reason_not_ready += '[ no .bvec file ]'
             if not has_bval or not has_bvec:
-                vol.tag = ''  # remove it => this serie will be discarded
+                vol.tag = 'DISCARD'  # remove it => this serie will be discarded
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # treat non-original
+
+    # build groups of parameters
+    columns = ['SeriesDescription', 'PhaseEncodingDirection']
+    groups = seqinfo_discard.groupby(columns)
+
+    # loop over groups
+    for grp_name, series in groups:
+
+        first_serie = series.iloc[0]  # they are all the same (except run number), so take the first one
+
+        acq = utils.clean_name(first_serie['ProtocolName'])
+        dir = utils.get_phase_encoding_direction(first_serie['PhaseEncodingDirection'])
+
+        # loop over runs
+        run_idx = 0
+        for row_idx, seq in series.iterrows():
+            run_idx += 1
+            vol = seq['Volume']
+            vol.ses = ses
+            vol.reason_not_ready = f"dwi non-ORIGINAL {str(seq['ImageType'])}"
+            vol.tag = 'DISCARD'
+            vol.suffix = 'dwi'
+            vol.sub = sub_name
+            vol.bidsfields['acq'] = acq
+            vol.bidsfields['dir'] = dir
+            vol.bidsfields['run'] = run_idx
 
 
 ########################################################################################################################
 def prog_bold(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
 
-    # keep 2D acquistion type
+    # keep 2D acquisition type
     seqinfo = utils.keep_ndim(seqinfo, '2D')
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -310,7 +339,7 @@ def prog_bold(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
         nii = nibabel.load( seq['Volume'].nii.path )
         if nii.ndim < 4:  # check 4D
             seq['Volume'].reason_not_ready = 'non-4D bold volume'
-            seqinfo = seqinfo.drop(row_idx)
+            seq['Volume'].tag = 'DISCARD'
 
     # ------------------------------------------------------------------------------------------------------------------
     # now that we already parsed SBRef and eliminated non-4D volumes, we can continue with the "normal" bold volumes
@@ -336,7 +365,10 @@ def prog_bold(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
             run_idx += 1
             vol                    = seq['Volume']
             vol.ses                = ses
-            vol.tag                = 'func'
+            if len(vol.tag) == 0:
+                vol.tag            = 'func'
+            else:
+                pass  # because it's a 'DISCARD' from 'non-4D'
             vol.suffix             = 'bold'
             vol.sub                = sub_name
             vol.bidsfields['task'] = task
@@ -520,6 +552,7 @@ def prog_ep2d_se(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
     for _, seq in seqinfo_discard.iterrows():
         vol                   = seq['Volume']
         vol.reason_not_ready  = f"fmap epi non-magnitude {str(seq['ImageType'])}"
+        vol.tag               = 'DISCARD'
     seqinfo = seqinfo_magnitude
 
     # build groups of parameters

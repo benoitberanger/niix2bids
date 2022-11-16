@@ -344,6 +344,13 @@ def apply_bids_architecture(out_dir: str, volume_list: List[Volume], symlink_or_
         else:
             log_error_not_interpreted.append(f'file not interpreted : {vol.nii.path}')
 
+    # just sort them so it's easier to read
+    log_error_not_interpreted.sort()
+    log_warning_unknown.sort()
+    log_warning.sort()
+    log_info_discard.sort()
+    log_info.sort()
+
     # print them all, but in order
     for msg in log_error_not_interpreted:
         log.error(msg)
@@ -351,8 +358,8 @@ def apply_bids_architecture(out_dir: str, volume_list: List[Volume], symlink_or_
         log.warning(msg)
     for msg in log_warning:
         log.warning(msg)
-    # for msg in log_info_discard:
-    #     log.info(msg)
+    for msg in log_info_discard:
+        log.warning(msg)
     for msg in log_info:
         log.info(msg)
 
