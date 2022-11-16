@@ -46,6 +46,8 @@ def init_logger(write_file: bool, out_dir: str, store_report: bool = False) -> N
     if write_file:
         upperstack = inspect.stack()[1]
         mdl_name = inspect.getmodule(upperstack[0]).__name__.split('.')[0]  # get module name of the module calling
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir,exist_ok=True)
         logfile = os.path.join(out_dir, datetime.now().strftime('%Y-%m-%d_%Hh%Sm%S') + "_" + mdl_name + ".log")
 
         fileHandeler = logging.FileHandler(logfile)
