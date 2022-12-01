@@ -424,3 +424,4 @@ def write_bids_other_files(out_dir: str) -> None:
         fp.write('*.log \n')
         fp.write('UNKNOWN \n')
         fp.write('DISCARD \n')
+        fp.write('NON_BIDS \n')
