@@ -11,6 +11,7 @@ product = [
     ['.*ep2d_se.*'                 , 'prog_ep2d_se'],  # SpinEcho EPI
     ['^haste$'                     , 'prog_DISCARD'],  # haste is used as first sequence to get subject position in the magnet
     ['resolve'                     , 'prog_diff'   ],  # diffusion using segmented EPI
+    ['AALScout'                    , 'prog_DISCARD'],  # auto align scout
 ]
 
 wip = [
@@ -18,6 +19,7 @@ wip = [
     ["ep2d_stejskal_386"           , "prog_diff"   ],  # diffusion WIP
     [".*wip925.*"                  , "prog_mprage" ],  # compressed sensing mprage & mp2rage
     ["tse_vfl_wipb15"              , "prog_tse_vfl"],  # 3D SPACE WIP
+    ["tse_vfl_cs_WIP1061"          , "prog_tse_vfl"],  # 3D SPACE WIP compressed sensing
 ]
 
 c2p = [
