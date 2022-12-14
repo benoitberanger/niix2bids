@@ -87,7 +87,11 @@ class Volume:
 
     # ------------------------------------------------------------------------------------------------------------------
     def check_if_bval_exists(self) -> bool:
-        bval_file = os.path.splitext(self.nii.path)[0] + ".bval"
+        root, ext = os.path.splitext(self.nii.path)
+        if ext == ".gz":
+            bval_file = os.path.splitext(root)[0] + ".bval"
+        else:
+            bval_file = os.path.splitext(self.nii.path)[0] + ".bval"
         if not os.path.exists(bval_file):
             return False
         else:
@@ -96,7 +100,11 @@ class Volume:
 
     # ------------------------------------------------------------------------------------------------------------------
     def check_if_bvec_exists(self) -> bool:
-        bvec_file = os.path.splitext(self.nii.path)[0] + ".bvec"
+        root, ext = os.path.splitext(self.nii.path)
+        if ext == ".gz":
+            bvec_file = os.path.splitext(root)[0] + ".bvec"
+        else:
+            bvec_file = os.path.splitext(self.nii.path)[0] + ".bvec"
         if not os.path.exists(bvec_file):
             return False
         else:
