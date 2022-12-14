@@ -55,7 +55,7 @@ Optional arguments:
                         located in [niix2bids]/config_file/siemens.py
   -v, --version         show program's version number and exit
 
-niix2bids_version==v2.3.0 + bids_version==v1.6.0
+niix2bids_version==v2.4.0 + bids_version==v1.6.0
 ```
 
 

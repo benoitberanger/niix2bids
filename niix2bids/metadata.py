@@ -1,4 +1,4 @@
-__version__ = 'v2.3.0'
+__version__ = 'v2.4.0'
 
 
 def get_niix2bids_version() -> str:
