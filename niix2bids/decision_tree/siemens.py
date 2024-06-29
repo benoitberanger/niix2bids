@@ -108,8 +108,8 @@ def prog_tse_vfl(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
     # keep 3D
     seqinfo = utils.keep_ndim(seqinfo, '3D')
 
-    seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.?spcR?'  )
-    seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.?spcirR?')
+    seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'PulseSequenceName', '.?spcR?'  )
+    seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'PulseSequenceName', '.?spcirR?')
 
     # ------------------------------------------------------------------------------------------------------------------
     # T2w : 3DT2 SPACE
@@ -480,8 +480,8 @@ def prog_gre(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
 ########################################################################################################################
 def prog_tse(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
 
-    seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.*t?se')
-    seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'SequenceName', '.*tir')
+    seqinfo_T2w   = utils.slice_with_genericfield(seqinfo, 'PulseSequenceName', '.*t?se')
+    seqinfo_FLAIR = utils.slice_with_genericfield(seqinfo, 'PulseSequenceName', '.*tir')
 
     # ------------------------------------------------------------------------------------------------------------------
     # T2w
@@ -606,7 +606,7 @@ def prog_DISCARD(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
             vol.sub                = sub_name
             vol.bidsfields['acq']  = acq
             vol.bidsfields['run']  = run_idx
-            vol.reason_not_ready  = f'discard PulseSequenceName = {first_serie["PulseSequenceName"]}'
+            vol.reason_not_ready  = f'discard PulsePulseSequenceName = {first_serie["PulseSequenceName"]}'
 
 
 ########################################################################################################################
