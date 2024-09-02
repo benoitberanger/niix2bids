@@ -606,7 +606,7 @@ def prog_DISCARD(seqinfo: pd.DataFrame, sub_name: str, ses: int) -> None:
             vol.sub                = sub_name
             vol.bidsfields['acq']  = acq
             vol.bidsfields['run']  = run_idx
-            vol.reason_not_ready  = f'discard PulsePulseSequenceName = {first_serie["PulseSequenceName"]}'
+            vol.reason_not_ready  = f'discard PulseSequenceName = {first_serie["PulseSequenceName"]}'
 
 
 ########################################################################################################################
@@ -651,7 +651,7 @@ def run(volume_list: List[Volume], config: list) -> pd.DataFrame:
     # make some extraction / conversion --------------------------------------------------------------------------------
 
     # %CustomerSeq%_cmrr_mbep2d_bold -> cmrr_mbep2d_bold
-    df['PulseSequenceName'] = df['PulseSequenceDetails'].apply(lambda s: s.rsplit("%_")[1] if s.find("%_")>0 else s)
+    df['SequenceBinaryName'] = df['PulseSequenceDetails'].apply(lambda s: s.rsplit("%_")[1] if s.find("%_")>0 else s)
 
     # [ORIGINAL, PRIMARY, M, ND, MOSAIC] -> ORIGINAL_PRIMARY_M_ND_MOSAIC
     df['ImageTypeStr'] = df['ImageType'].apply(lambda s: '_'.join(s))
@@ -675,7 +675,7 @@ def run(volume_list: List[Volume], config: list) -> pd.DataFrame:
             for seq_regex, fcn_name in config:      # loop over sequence decision tree
     
                 # get list of corresponding sequence
-                seqinfo = utils.slice_with_genericfield(df_by_sess, 'PulseSequenceName', seq_regex)
+                seqinfo = utils.slice_with_genericfield(df_by_sess, 'SequenceBinaryName', seq_regex)
                 if seqinfo.empty: continue          # just to run the code faster
 
                 func = eval(fcn_name)               # fetch the name of the prog_ to call dynamically
