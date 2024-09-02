@@ -36,8 +36,8 @@ def sanity_check(df: pd.DataFrame) -> pd.DataFrame:
     # PulseSequenceDetails ? this is the basic sequence name : %SiemensSeq%_gre
     df = check_key(df=df, key='PulseSequenceDetails')
 
-    # SequenceName ? example : 'fl3d12r_ns'
-    df = check_key(df=df, key='SequenceName')
+    # PulseSequenceName ? example : 'fl3d12r_ns'
+    df = check_key(df=df, key='PulseSequenceName', alias='SequenceName')
 
     # MRAcquisitionType ? example : '2D', '3D'
     df = check_key(df=df, key='MRAcquisitionType')
@@ -46,7 +46,7 @@ def sanity_check(df: pd.DataFrame) -> pd.DataFrame:
 
 
 ########################################################################################################################
-def check_key(df: pd.DataFrame, key: str, msg: str = '', val: str = '') -> pd.DataFrame:
+def check_key(df: pd.DataFrame, key: str, msg: str = '', val: str = '', alias: str = '') -> pd.DataFrame:
 
     log = get_logger()
 
@@ -55,8 +55,15 @@ def check_key(df: pd.DataFrame, key: str, msg: str = '', val: str = '') -> pd.Da
 
     is_key_present = key in df.columns
     if not is_key_present:
-        log.error(msg)
-        sys.exit(1)
+        is_alias_present = False
+        if len(alias)>0:
+            is_alias_present = alias in df.columns
+        if is_alias_present:
+            df[key] = df[alias]  # just copy it
+        else:
+            log.error(msg)
+            sys.exit(1)
+    
     for row_idx, seq in df.iterrows():
         if pd.isna(seq[key]):
             vol                   = seq['Volume']
