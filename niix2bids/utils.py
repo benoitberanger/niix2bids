@@ -175,7 +175,8 @@ def isolate_nii_files(in_list: List[str]) -> List[str]:
 def check_if_json_exists(file_list_nii: List[str]) -> Tuple[List[str], List[str]]:
     log = get_logger()
 
-    file_list_json = []
+    file_list_nii_ok = []
+    file_list_json   = []
     for file in file_list_nii:
         root, ext = os.path.splitext(file)
         if ext == ".gz":
@@ -184,12 +185,17 @@ def check_if_json_exists(file_list_nii: List[str]) -> Tuple[List[str], List[str]
             jsonfile = os.path.splitext(file)[0] + ".json"
         if not os.path.exists(jsonfile):
             log.warning(f"this file has no .json associated : {file}")
-            file_list_nii.remove(file)
         else:
+            file_list_nii_ok.append(file)
             file_list_json.append(jsonfile)
 
-    log.info(f"remaining {len(file_list_nii)} nifti files")
-    return file_list_nii, file_list_json
+    log.info(f"remaining {len(file_list_nii_ok)} nifti files")
+
+    if len(file_list_nii_ok) != len(file_list_json):
+        log.critical('len(file_list_nii_ok) != len(file_list_json) : there is a bug a in the code, please report the Issue')
+        sys.exit(1)
+
+    return file_list_nii_ok, file_list_json
 
 
 ########################################################################################################################
